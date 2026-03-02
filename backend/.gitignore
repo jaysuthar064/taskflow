@@ -1,0 +1,37 @@
+# Node modules (VERY IMPORTANT)
+node_modules/
+
+# Environment variables (NEVER upload secrets)
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+
+# Build folders
+dist/
+build/
+
+# Optional cache
+.cache/
+
+# VS Code settings (optional)
+.vscode/
+
+# Mac system files
+.AppleDouble
+.LSOverride
