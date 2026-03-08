@@ -72,13 +72,14 @@ export const loginUser = async (req, res) => {
 //Create Task Controller
 export const taskCreate=async(req,res)=>{
     try{
-        const {title,description}=req.body;
+        const {title,description,completed}=req.body;
         const user= req.user._id;
 
         const createTask= await Task.create({
             title,
             description,
-            user
+            user,
+            completed
         });
 
         if (createTask){
@@ -86,7 +87,7 @@ export const taskCreate=async(req,res)=>{
                 message:`New task created`,
                 title:title,
                 description:description,
-                user:user
+                user:user,
             });
         }else{
             res.status(400).json({
@@ -104,11 +105,40 @@ export const taskCreate=async(req,res)=>{
 //Get all task Controller
 export const getTask=async(req,res)=>{
     try{
-        const allTasks= await Task.find({user:req.user._id})
+        const filter = {
+            user:req.user._id
+        }
+        //Filtering Task
+        if(req.query.completed !== undefined){
+            filter.completed = req.query.completed === "true";
+        }
 
-        res.status(200).json({
-            allTasks
-        });
+        if(req.query.search){
+            filter.$or=[
+                {title:{$regex:req.query.search,$options:"i"}},
+                {description:{$regex:req.query.search,$options:"i"}}
+            ];
+        }
+
+        let query = Task.find(filter)
+
+        //Sorting Task
+        const sortTask = req.query.sort;
+        if(sortTask){
+            query = query.sort(sortTask);
+        }else{
+            query = query.sort("-createdAt");
+        }
+
+        //Pagination
+        const page = Number(req.query.page) || 1;
+        const limit = Math.min(Number(req.query.limit) || 10 , 50);
+        const skip = (page -1) * limit;
+        query = query.skip(skip).limit(limit);
+
+        const tasks = await query;
+
+        res.status(200).json({tasks});
     }catch(error){
         res.status(500).json({
             message:`Server error`
@@ -116,7 +146,7 @@ export const getTask=async(req,res)=>{
     }
 }
 
-//Get Specific Controller
+//Get Specific task Controller
 export const getSingleTask=async(req,res)=>{
     try{
        const singleTask= await Task.findById(req.params.id);
@@ -142,7 +172,7 @@ export const getSingleTask=async(req,res)=>{
     }
 }
 
-//Update Controller
+//Update Task Controller
 export const updateTask= async(req,res)=>{
     try{
         const updateTask= await Task.findByIdAndUpdate(
@@ -167,7 +197,7 @@ export const updateTask= async(req,res)=>{
     }
 }
 
-//Delete Controller
+//Delete Task Controller
 export const deleteTask = async(req,res)=>{
     try{
         const deleteTask = await Task.findById(req.params.id);
