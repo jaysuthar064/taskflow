@@ -1,5 +1,6 @@
 import User from "../models/user.js";
 import Task from "../models/taskModel.js";
+import mongoose from "mongoose";
 
 //Create Task Controller
 export const taskCreate=async(req,res)=>{
@@ -150,6 +151,49 @@ export const deleteTask = async(req,res)=>{
 
        return res.status(200).json({
             message:`Task successfully deleted`
+        });
+    }catch(error){
+        res.status(500).json({
+            message:`Server Error`
+        });
+    }
+}
+
+//Stats Controllers
+export const taskStats = async(req,res)=>{
+    try{
+        const userId = req.user._id;
+        const stats = await Task.aggregate([
+            {
+                $match : {user : new mongoose.Types.ObjectId(userId)}
+            },
+            {
+                $group : {
+                    _id : null ,
+                    totalTask : {$sum : 1},
+                    completedTask : {
+                        $sum : {
+                            $cond : [{$eq:["$completed",true]},1,0]
+                        }
+                    },
+                    pendingTask : {
+                        $sum : {
+                            $cond : [{eq:["$completed",false]},1,0]
+                        }
+                    }
+                }
+            }
+        ]);
+
+        const result = stats[0] || {
+            totalTask : 0,
+            completedTask : 0,
+            pendingTask : 0
+        }
+
+        res.status(200).json({
+            status : "success",
+            data : result
         });
     }catch(error){
         res.status(500).json({
