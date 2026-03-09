@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/authRoutes.js";
+import taskRoutes from "./routes/taskRoutes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 
 //Routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1",taskRoutes);
 
 //Health Check Route
 app.get("/", (req, res) => {
