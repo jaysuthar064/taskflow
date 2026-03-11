@@ -22,8 +22,8 @@ app.use(limiter);
 app.use(express.json());
 
 //Routes
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1",taskRoutes);
+app.use("/api/v1/", authRoutes);
+app.use("/api/v1/",taskRoutes);
 
 //Health Check Route
 app.get("/", (req, res) => {
