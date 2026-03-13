@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "check:imports": "node scripts/check-import-case.mjs",
+    "predev": "npm run check:imports",
     "dev": "nodemon server.js",
+    "prestart": "npm run check:imports",
     "start": "node server.js"
   },
   "keywords": [],
