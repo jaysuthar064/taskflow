@@ -1,4 +1,3 @@
-import User from "../models/user.js";
 import Task from "../models/taskModel.js";
 import mongoose from "mongoose";
 
@@ -18,9 +17,7 @@ export const taskCreate=async(req,res)=>{
         if (createTask){
             res.status(201).json({
                 message:`New task created`,
-                title:title,
-                description:description,
-                user:user,
+                data:createTask
             });
         }else{
             res.status(400).json({
@@ -71,7 +68,10 @@ export const getTask=async(req,res)=>{
 
         const tasks = await query;
 
-        res.status(200).json({tasks});
+        res.status(200).json({
+            tasks,
+            data:tasks
+        });
     }catch(error){
         res.status(500).json({
             message:`Server error`
@@ -114,15 +114,22 @@ export const updateTask= async(req,res)=>{
             {new:true}
         );
 
-        if(updateTask.user.toString() !== req.user._id.toString()){
-        res.status(403).json({
-            message:`You are not authorized to edit this task`
-        });
-       }
+        if(!updateTask){
+            return res.status(404).json({
+                message:`Task not found`
+            });
+        }
 
-       res.status(200).json({
-         task:updateTask
-       });
+        if(updateTask.user.toString() !== req.user._id.toString()){
+            return res.status(403).json({
+                message:`You are not authorized to edit this task`
+            });
+        }
+
+        res.status(200).json({
+            task:updateTask,
+            data:updateTask
+        });
     }catch(error){
         res.status(500).json({
             message:`Server Error`
@@ -170,15 +177,15 @@ export const taskStats = async(req,res)=>{
             {
                 $group : {
                     _id : null ,
-                    totalTask : {$sum : 1},
-                    completedTask : {
+                    totalTasks : {$sum : 1},
+                    completedTasks : {
                         $sum : {
                             $cond : [{$eq:["$completed",true]},1,0]
                         }
                     },
-                    pendingTask : {
+                    pendingTasks : {
                         $sum : {
-                            $cond : [{eq:["$completed",false]},1,0]
+                            $cond : [{ $eq:["$completed",false]},1,0]
                         }
                     }
                 }
@@ -186,9 +193,9 @@ export const taskStats = async(req,res)=>{
         ]);
 
         const result = stats[0] || {
-            totalTask : 0,
-            completedTask : 0,
-            pendingTask : 0
+            totalTasks : 0,
+            completedTasks : 0,
+            pendingTasks : 0
         }
 
         res.status(200).json({

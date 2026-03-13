@@ -20,7 +20,7 @@ const Register = ()=>{
             });
 
             alert("Registration Successfull");
-            navigate("/");
+            navigate("/login");
         }catch(error){
             alert(error.response?.data?.message || "Registration Failed");
         }
