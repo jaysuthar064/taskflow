@@ -1,10 +1,7 @@
 import axios from "axios";
-import dotenv from "dotenv";
-
-dotenv.config()
 
 const API = axios.create({
-    baseURL : process.env.VITE_API_URL
+    baseURL : import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1"
 });
 
 API.interceptors.request.use((config)=>{
