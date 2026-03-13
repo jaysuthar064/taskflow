@@ -1,12 +1,12 @@
-import { useContext, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import React, { useContext } from "react";
+import { Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-const ProtectedRoutes = ({children})=>{
-    const {token} = useContext(AuthContext);
+const ProtectedRoutes = ({ children }) => {
+    const { token } = useContext(AuthContext);
 
-    if(!token){
-       return <Navigate to="/login"/>;
+    if (!token) {
+       return <Navigate to="/login" replace />;
     }
 
     return children;
