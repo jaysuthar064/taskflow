@@ -53,16 +53,21 @@ const Dashboard = () => {
 
   useEffect(() => {
     let isMounted = true;
+    console.log("Dashboard: Fetching tasks...");
     API.get("/tasks")
       .then((response) => {
+        console.log("Dashboard: Tasks fetched successfully");
         const taskList = response.data?.data ?? response.data?.tasks ?? [];
         if (isMounted) {
           setTasks(Array.isArray(taskList) ? taskList : []);
-          setTimeout(() => setIsLoading(false), 800); // Smooth transition
+          setTimeout(() => {
+            console.log("Dashboard: Setting isLoading to false");
+            setIsLoading(false);
+          }, 800); // Smooth transition
         }
       })
       .catch((error) => {
-        console.error("Error fetching tasks", error);
+        console.error("Dashboard: Error fetching tasks", error);
         if (isMounted) {
           setTasks([]);
           setIsLoading(false);

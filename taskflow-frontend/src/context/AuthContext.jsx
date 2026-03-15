@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback, useMemo } from "react";
 import API from "../api/axios";
 
 export const AuthContext = createContext();
@@ -26,7 +26,7 @@ const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(getStoredToken);
   const [user, setUser] = useState(getStoredUser);
 
-  const login = (nextToken, nextUser) => {
+  const login = useCallback((nextToken, nextUser) => {
     try {
       localStorage.setItem("token", nextToken);
       if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
@@ -35,9 +35,9 @@ const AuthProvider = ({ children }) => {
     }
     setToken(nextToken);
     setUser(nextUser);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     try {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -46,7 +46,7 @@ const AuthProvider = ({ children }) => {
     }
     setToken(null);
     setUser(null);
-  };
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -69,8 +69,10 @@ const AuthProvider = ({ children }) => {
     fetchProfile();
   }, [token, user]);
 
+  const value = useMemo(() => ({ token, user, login, logout }), [token, user, login, logout]);
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

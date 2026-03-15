@@ -81,3 +81,33 @@ export const loginUser = async (req, res) => {
         });
     }
 }
+
+// Google OAuth Callback Controller
+export const googleAuthCallback = async (req, res) => {
+    try {
+        const user = req.user;
+        
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRE }
+        );
+
+        const userData = JSON.stringify({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+        });
+
+        // Redirect to frontend with token and user data
+        // Using a query parameter for the token is common for simple OAuth flows
+        // In production, you might want to use a more secure method or a dedicated callback page
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(userData)}`);
+    } catch (error) {
+        res.status(500).json({
+            message: `OAuth Redirection Error`
+        });
+    }
+}

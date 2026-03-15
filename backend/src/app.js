@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import passport from "./config/passport.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(limiter);
 
 //Body Parser
 app.use(express.json());
+app.use(passport.initialize());
 
 //Routes
 app.use("/api/v1/", authRoutes);
