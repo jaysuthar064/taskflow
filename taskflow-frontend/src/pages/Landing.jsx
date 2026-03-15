@@ -27,8 +27,8 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-surface-50 overflow-x-hidden selection:bg-primary-100 selection:text-primary-900">
-      {/* Decorative Background Elements */}
-      <div className="fixed inset-0 pointer-events-none z-0">
+      {/* Decorative Background Elements - Hidden on mobile for performance */}
+      <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
         <motion.div 
           animate={{ x: [0, 50, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -115,7 +115,7 @@ const Landing = () => {
             </p>
             <div className="flex flex-col min-[450px]:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full min-[450px]:w-auto">
-                <Link to="/register" className="btn-primary px-10 py-4.5 text-base sm:text-lg flex items-center group justify-center shadow-xl shadow-primary-500/25">
+                <Link to="/register" className="btn-primary px-5 sm:px-10 py-3.5 sm:py-4.5 text-base sm:text-lg flex items-center group justify-center shadow-xl shadow-primary-500/25">
                   Get Started for Free
                   <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -239,30 +239,31 @@ const Landing = () => {
         {...fadeInUp}
         className="py-20 min-[360px]:py-28 px-4 sm:px-6 relative"
       >
-        <div className="max-w-6xl mx-auto bg-surface-900 rounded-[3rem] p-10 min-[400px]:p-16 md:p-24 text-center relative overflow-hidden shadow-3xl">
+        <div className="max-w-6xl mx-auto bg-surface-900 rounded-3xl sm:rounded-[3rem] p-8 sm:p-16 md:p-24 text-center relative overflow-hidden shadow-3xl">
           <motion.div 
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
             transition={{ duration: 10, repeat: Infinity }}
-            className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary-600/30 blur-[100px] -translate-y-1/2 translate-x-1/2"
+            className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary-600/30 blur-[100px] -translate-y-1/2 translate-x-1/2 hidden lg:block"
           />
           <motion.div 
             animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.15, 0.1] }}
             transition={{ duration: 12, repeat: Infinity }}
-            className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 blur-[120px] translate-y-1/2 -translate-x-1/2"
+            className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 blur-[120px] translate-y-1/2 -translate-x-1/2 hidden lg:block"
           />
           
-          <div className="relative z-10 space-y-8">
-            <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">Your best work <br /> starts here.</h2>
-            <p className="text-lg md:text-2xl text-surface-400 max-w-3xl mx-auto leading-relaxed font-medium">
+          <div className="relative z-10 space-y-6 sm:space-y-8">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">Your best work <br /> starts here.</h2>
+            <p className="text-base sm:text-lg md:text-2xl text-surface-400 max-w-3xl mx-auto leading-relaxed font-medium">
               Join thousands of makers and engineering masters building better with TaskFlow.
             </p>
-            <motion.div 
-                whileHover={{ scale: 1.05 }} 
-                whileTap={{ scale: 0.95 }}
-                className="pt-6"
-            >
-              <Link to="/register" className="btn-primary px-12 py-5 text-lg shadow-2xl shadow-primary-500/20">Create My Workspace</Link>
-            </motion.div>
+            <div className="pt-4 flex justify-center">
+              <Link 
+                to="/register" 
+                className="btn-primary w-full max-w-[260px] lg:max-w-none lg:w-auto px-5 py-3.5 lg:px-12 lg:py-5 text-sm lg:text-lg shadow-2xl shadow-primary-500/20 flex items-center justify-center text-center transition-all hover:scale-105 active:scale-95"
+              >
+                Create My Workspace
+              </Link>
+            </div>
           </div>
         </div>
       </motion.section>
@@ -292,8 +293,8 @@ const Landing = () => {
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-8">
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm font-semibold text-surface-600">
+          <div className="flex flex-col items-center gap-6 sm:gap-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-x-8 gap-y-4 text-sm font-semibold text-surface-600">
               <Link to="/privacy" className="hover:text-primary-600 transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-primary-600 transition-colors">Terms of Service</Link>
               <Link to="/about" className="hover:text-primary-600 transition-colors">About Us</Link>
