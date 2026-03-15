@@ -99,7 +99,7 @@ const Privacy = () => {
             <div className="w-12 h-1 bg-surface-200 mx-auto rounded-full"></div>
             <p className="text-surface-500 font-medium">Still have questions?</p>
             <p className="text-surface-400 max-w-lg mx-auto leading-relaxed">
-                We believe in human-readable policies. Contact our privacy team at <a href="mailto:privacy@taskflow.com" className="text-primary-600 font-bold hover:underline">privacy@taskflow.com</a> for deep dives into our technical safeguards.
+                We believe in human-readable policies. Contact our privacy team at <a href="mailto:jayantisuthar094@gmail.com" className="text-primary-600 font-bold hover:underline">jayantisuthar094@gmail.com</a> for deep dives into our technical safeguards.
             </p>
           </section>
         </div>

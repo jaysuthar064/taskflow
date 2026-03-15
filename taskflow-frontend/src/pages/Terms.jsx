@@ -91,7 +91,7 @@ const Terms = () => {
                 </div>
                 <div className="space-y-2">
                     <h4 className="font-bold text-surface-900">Contact Legal</h4>
-                    <p className="text-sm text-primary-600 font-bold"><a href="mailto:legal@taskflow.com" className="hover:underline">legal@taskflow.com</a></p>
+                    <p className="text-sm text-primary-600 font-bold"><a href="mailto:jayantisuthar094@gmail.com" className="hover:underline">jayantisuthar094@gmail.com</a></p>
                 </div>
             </div>
           </section>
