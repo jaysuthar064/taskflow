@@ -99,8 +99,8 @@ const Dashboard = () => {
       />
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-        isSidebarHidden ? "ml-0" : "lg:ml-[260px]"
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${
+        isSidebarHidden ? "ml-0" : "lg:ml-64"
       }`}>
         <Navbar onToggleSidebar={() => {
           if (window.innerWidth < 1024) {
@@ -108,28 +108,34 @@ const Dashboard = () => {
           }
         }} />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
+        <main className="flex-1 p-4 sm:p-5 lg:p-6">
+          <div className="max-w-full space-y-6">
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="max-w-full">
-                <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 tracking-tight">Project Board</h1>
-                <p className="text-sm sm:text-base text-surface-500 font-medium mt-0.5">Workspace / Active Tasks</p>
+              <div>
+                <h1 className="text-xl font-bold text-surface-900 tracking-tight">Project Board</h1>
+                <nav className="flex items-center text-[10px] font-bold text-surface-400 uppercase tracking-widest mt-1">
+                  <span>Workspace</span>
+                  <span className="mx-2">/</span>
+                  <span className="text-primary-600">Active Tasks</span>
+                </nav>
               </div>
               <button 
                 onClick={() => setIsTaskModalOpen(true)}
-                className="btn-primary w-full sm:w-auto px-6 py-2.5 sm:py-3 flex items-center justify-center shadow-lg shadow-primary-500/20"
+                className="btn-primary flex items-center shadow-sm"
               >
-                <Plus size={20} className="mr-2" />
-                <span>New Task</span>
+                <Plus size={16} className="mr-2" />
+                <span className="text-xs uppercase tracking-wider font-bold">New Task</span>
               </button>
             </div>
 
             {/* Stats Overview */}
-            <StatsCards refreshKey={statsRefreshKey} />
+            <div className="opacity-90">
+              <StatsCards refreshKey={statsRefreshKey} />
+            </div>
 
             {/* Task List / Kanban */}
-            <div className="pt-2 sm:pt-4">
+            <div className="pt-2">
               <TaskList tasks={tasks} onDelete={handleDeleteTask} onToggle={handleToggleTask} />
             </div>
           </div>
