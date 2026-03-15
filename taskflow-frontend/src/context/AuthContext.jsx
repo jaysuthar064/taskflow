@@ -25,6 +25,16 @@ const getStoredUser = () => {
 const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(getStoredToken);
   const [user, setUser] = useState(getStoredUser);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  useEffect(() => {
+    // Check if we have credentials on initial mount
+    const storedToken = getStoredToken();
+    const storedUser = getStoredUser();
+    if (storedToken) setToken(storedToken);
+    if (storedUser) setUser(storedUser);
+    setIsAuthReady(true);
+  }, []);
 
   const login = useCallback((nextToken, nextUser) => {
     try {
@@ -35,6 +45,7 @@ const AuthProvider = ({ children }) => {
     }
     setToken(nextToken);
     setUser(nextUser);
+    setIsAuthReady(true);
   }, []);
 
   const logout = useCallback(() => {
@@ -69,7 +80,7 @@ const AuthProvider = ({ children }) => {
     fetchProfile();
   }, [token, user]);
 
-  const value = useMemo(() => ({ token, user, login, logout }), [token, user, login, logout]);
+  const value = useMemo(() => ({ token, user, login, logout, isAuthReady }), [token, user, login, logout, isAuthReady]);
 
   return (
     <AuthContext.Provider value={value}>

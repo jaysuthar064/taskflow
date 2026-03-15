@@ -53,6 +53,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     let isMounted = true;
+    
+    // Safety check: if no token, don't hang
+    if (!localStorage.getItem("token")) {
+      console.log("Dashboard: No token found, stopping load");
+      setIsLoading(false);
+      return;
+    }
+
     console.log("Dashboard: Fetching tasks...");
     API.get("/tasks")
       .then((response) => {
