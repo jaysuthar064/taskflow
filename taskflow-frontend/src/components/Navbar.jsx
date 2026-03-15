@@ -3,7 +3,11 @@ import { AuthContext } from "../context/AuthContext";
 import { LogOut, User, Bell, Search, PanelLeftOpen } from "lucide-react";
 
 const Navbar = ({ onToggleSidebar }) => {
-  const { logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+
+  const initials = user?.name
+    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
+    : "U";
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-surface-200 px-3 md:px-6 py-2.5">
@@ -11,7 +15,7 @@ const Navbar = ({ onToggleSidebar }) => {
         <div className="flex items-center space-x-3">
           <button 
             onClick={onToggleSidebar}
-            className="p-2 text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+            className="p-2 text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all lg:hidden"
             title="Menu"
           >
             <PanelLeftOpen size={20} />
@@ -51,11 +55,11 @@ const Navbar = ({ onToggleSidebar }) => {
 
           <div className="flex items-center space-x-2 md:space-x-3">
             <div className="flex flex-col text-right hidden sm:flex">
-                <span className="text-sm font-semibold text-surface-900 leading-none">Jay Suthar</span>
-                <span className="text-xs text-surface-500 mt-1">Workspace Admin</span>
+                <span className="text-sm font-semibold text-surface-900 leading-none">{user?.name || "User"}</span>
+                <span className="text-xs text-surface-500 mt-1">{user?.role === "admin" ? "Workspace Admin" : "Member"}</span>
             </div>
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-primary-500/20 flex items-center justify-center bg-gradient-to-br from-primary-500 to-indigo-600 text-white font-bold text-xs md:text-sm shadow-md">
-              JS
+              {initials}
             </div>
             <button 
                 onClick={logout}

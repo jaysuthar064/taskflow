@@ -25,8 +25,8 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
     };
 
     return (
-        <div className="card glass p-6 w-full max-w-lg mx-auto">
-            <div className="flex justify-between items-center mb-6">
+        <div className="card glass p-4 sm:p-6 w-full max-w-lg mx-auto">
+            <div className="flex justify-between items-center mb-5 sm:mb-6">
                 <h2 className="text-xl font-bold text-surface-900 flex items-center">
                     <Plus className="mr-2 text-primary-600" size={24} />
                     New Task
@@ -38,7 +38,7 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                 )}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 <div className="space-y-2">
                     <label className="text-sm font-semibold text-surface-700 ml-1 flex items-center">
                         <Type size={16} className="mr-2" />
@@ -47,7 +47,7 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                     <input
                         type="text"
                         placeholder="What needs to be done?"
-                        className="input-field py-3 text-lg"
+                        className="input-field py-2.5 sm:py-3 text-base sm:text-lg"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
@@ -61,17 +61,17 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                     </label>
                     <textarea
                         placeholder="Add more details about this task..."
-                        className="input-field min-h-[120px] resize-none py-3"
+                        className="input-field min-h-[100px] sm:min-h-[120px] resize-none py-2.5 sm:py-3"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
                 </div>
 
-                <div className="flex space-x-3 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="btn-primary flex-1 py-4 text-base shadow-xl shadow-primary-500/20"
+                        className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base shadow-xl shadow-primary-500/20 order-1 sm:order-none"
                     >
                         {isLoading ? "Creating..." : "Create Task"}
                     </button>
@@ -79,7 +79,7 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="btn-secondary px-6"
+                            className="btn-secondary w-full sm:w-auto px-6 py-3.5 sm:py-4 order-2 sm:order-none"
                         >
                             Cancel
                         </button>

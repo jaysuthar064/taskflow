@@ -92,9 +92,6 @@ const Dashboard = () => {
         <Navbar onToggleSidebar={() => {
           if (window.innerWidth < 1024) {
             setIsSidebarOpen(!isSidebarOpen);
-            setIsSidebarHidden(false);
-          } else {
-            setIsSidebarHidden(!isSidebarHidden);
           }
         }} />
 

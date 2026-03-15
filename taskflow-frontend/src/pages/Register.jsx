@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import { AuthContext } from "../context/AuthContext";
 
 const Register = () => {
     const [name, setName] = useState("");
@@ -9,13 +10,15 @@ const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
+    const { login } = useContext(AuthContext);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await API.post("/register", { name, email, password });
-            alert("Registration successful! Please login.");
-            navigate("/login");
+            const response = await API.post("/register", { name, email, password });
+            login(response.data.token, response.data.user);
+            navigate("/dashboard");
         } catch (error) {
             alert(error.response?.data?.message || "Registration Failed");
         } finally {

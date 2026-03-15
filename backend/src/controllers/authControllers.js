@@ -18,8 +18,16 @@ export const registerUser = async (req, res) => {
             password
         });
 
+        // Generate JWT token for immediate login
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRE }
+        );
+
         res.status(201).json({
             message: `User registration successful`,
+            token,
             user: {
                 id: user._id,
                 name: user.name,
@@ -60,7 +68,12 @@ export const loginUser = async (req, res) => {
 
         res.status(200).json({
             message: `Login successfully`,
-            token
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+            }
         });
     } catch (error) {
         res.status(500).json({
@@ -68,4 +81,3 @@ export const loginUser = async (req, res) => {
         });
     }
 }
-
