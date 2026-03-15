@@ -104,7 +104,6 @@ export const googleAuthCallback = async (req, res) => {
         const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
         const redirectUrl = `${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(userData)}`;
         
-        console.log(`📡 [OAuth] Redirecting to: ${frontendUrl}`);
         res.redirect(redirectUrl);
     } catch (error) {
         res.status(500).json({

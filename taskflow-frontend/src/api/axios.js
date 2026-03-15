@@ -14,7 +14,6 @@ const getBaseURL = () => {
   const normalized = rawURL.replace(/\/+$/, "");
   const finalURL = normalized.endsWith("/api/v1") ? normalized : `${normalized}/api/v1`;
   
-  console.log(`🚀 [Config] Using API Root: ${finalURL}`);
   return finalURL;
 };
 

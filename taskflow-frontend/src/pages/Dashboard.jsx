@@ -56,20 +56,16 @@ const Dashboard = () => {
     
     // Safety check: if no token, don't hang
     if (!localStorage.getItem("token")) {
-      console.log("Dashboard: No token found, stopping load");
       setIsLoading(false);
       return;
     }
 
-    console.log("Dashboard: Fetching tasks...");
     API.get("/tasks")
       .then((response) => {
-        console.log("Dashboard: Tasks fetched successfully");
         const taskList = response.data?.data ?? response.data?.tasks ?? [];
         if (isMounted) {
           setTasks(Array.isArray(taskList) ? taskList : []);
           setTimeout(() => {
-            console.log("Dashboard: Setting isLoading to false");
             setIsLoading(false);
           }, 800); // Smooth transition
         }

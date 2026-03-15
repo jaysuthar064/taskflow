@@ -13,14 +13,11 @@ const GoogleCallback = () => {
         const userDataStr = params.get("user");
 
         if (token && userDataStr) {
-            console.log("GoogleCallback: Found token and user data, logging in...");
             try {
                 const user = JSON.parse(decodeURIComponent(userDataStr));
                 login(token, user);
-                console.log("GoogleCallback: Login called, navigating to dashboard...");
                 // Slight delay to ensure context update propagates
                 setTimeout(() => {
-                    console.log("GoogleCallback: Navigating now...");
                     navigate("/dashboard", { replace: true });
                 }, 100);
             } catch (error) {
