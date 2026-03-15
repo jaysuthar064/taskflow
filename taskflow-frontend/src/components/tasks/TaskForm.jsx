@@ -1,68 +1,93 @@
 import React, { useState } from "react";
 import API from "../../api/axios";
+import { Plus, X, AlignLeft, Type } from "lucide-react";
 
-const TaskForm = ({onTaskCreated}) => {
-    const [title,setTitle] = useState("");
+const TaskForm = ({ onTaskCreated, onClose }) => {
+    const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async(e)=>{
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        try{
-           const response =  await API.post("/tasks",{
-                title,
-                description
-            });
-
+        setIsLoading(true);
+        try {
+            const response = await API.post("/tasks", { title, description });
             const createdTask = response.data?.data ?? response.data?.task ?? null;
-            if (onTaskCreated) {
-              onTaskCreated(createdTask);
-            }
+            if (onTaskCreated) onTaskCreated(createdTask);
             setTitle("");
             setDescription("");
-
-            alert("Task Created Successfully")
-        }catch(error){
+            if (onClose) onClose();
+        } catch (error) {
             alert(error.response?.data?.message || "Task Creation Failed");
+        } finally {
+            setIsLoading(false);
         }
-    }
+    };
 
-    
-  return (
-     <div className="bg-white p-6 rounded-lg shadow ">
+    return (
+        <div className="card glass p-6 w-full max-w-lg mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-surface-900 flex items-center">
+                    <Plus className="mr-2 text-primary-600" size={24} />
+                    New Task
+                </h2>
+                {onClose && (
+                    <button onClick={onClose} className="p-2 hover:bg-surface-100 rounded-full transition-colors text-surface-400">
+                        <X size={20} />
+                    </button>
+                )}
+            </div>
 
-      <h2 className="text-xl font-semibold mb-4 ">
-        Create Task
-      </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                    <label className="text-sm font-semibold text-surface-700 ml-1 flex items-center">
+                        <Type size={16} className="mr-2" />
+                        Title
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="What needs to be done?"
+                        className="input-field py-3 text-lg"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                    />
+                </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-semibold text-surface-700 ml-1 flex items-center">
+                        <AlignLeft size={16} className="mr-2" />
+                        Description
+                    </label>
+                    <textarea
+                        placeholder="Add more details about this task..."
+                        className="input-field min-h-[120px] resize-none py-3"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                    />
+                </div>
 
-        <input
-          type="text"
-          placeholder="Task Title"
-          className="w-full border p-2 rounded"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-
-        <textarea
-          placeholder="Task Description"
-          className="w-full border p-2 rounded"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <button
-        type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" 
-        >
-          Create Task
-        </button>
-
-      </form>
-
-    </div>
-  );
+                <div className="flex space-x-3 pt-2">
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="btn-primary flex-1 py-4 text-base shadow-xl shadow-primary-500/20"
+                    >
+                        {isLoading ? "Creating..." : "Create Task"}
+                    </button>
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="btn-secondary px-6"
+                        >
+                            Cancel
+                        </button>
+                    )}
+                </div>
+            </form>
+        </div>
+    );
 };
 
 export default TaskForm;
