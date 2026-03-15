@@ -101,10 +101,11 @@ export const googleAuthCallback = async (req, res) => {
         });
 
         // Redirect to frontend with token and user data
-        // Using a query parameter for the token is common for simple OAuth flows
-        // In production, you might want to use a more secure method or a dedicated callback page
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(userData)}`);
+        const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+        const redirectUrl = `${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(userData)}`;
+        
+        console.log(`📡 [OAuth] Redirecting to: ${frontendUrl}`);
+        res.redirect(redirectUrl);
     } catch (error) {
         res.status(500).json({
             message: `OAuth Redirection Error`
