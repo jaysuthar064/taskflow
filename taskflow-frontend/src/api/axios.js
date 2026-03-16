@@ -12,9 +12,9 @@ const getBaseURL = () => {
   }
 
   const normalized = rawURL.replace(/\/+$/, "");
-  const finalURL = normalized.endsWith("/api/v1") ? normalized : `${normalized}/api/v1`;
+  const baseApi = normalized.endsWith("/api/v1") ? normalized : `${normalized}/api/v1`;
   
-  return finalURL;
+  return `${baseApi}/`;
 };
 
 export const baseURL = getBaseURL();

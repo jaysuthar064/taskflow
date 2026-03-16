@@ -27,14 +27,14 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4 sm:p-6">
+        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-3 sm:p-6">
             <div className="w-full max-w-md">
-                <div className="mb-8 sm:mb-10 text-center">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 tracking-tight mb-2">Create Account</h1>
-                    <p className="text-sm sm:text-base text-surface-500">Start managing your projects</p>
+                <div className="mb-6 sm:mb-10 text-center">
+                    <h1 className="text-xl sm:text-3xl font-bold text-surface-900 tracking-tight mb-2">Create Account</h1>
+                    <p className="text-xs sm:text-base text-surface-500">Start managing your projects</p>
                 </div>
                 
-                <div className="card glass p-5 sm:p-8">
+                <div className="card glass p-4 sm:p-8">
                     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-surface-700 ml-1">Full Name</label>
@@ -96,7 +96,7 @@ const Register = () => {
 
                     <a
                         href={`${baseURL}/auth/google`}
-                        className="btn-secondary w-full py-3 flex items-center justify-center space-x-3 transition-all hover:bg-surface-50 active:scale-[0.98]"
+                        className="btn-secondary w-full py-2.5 sm:py-3 flex items-center justify-center space-x-3 transition-all hover:bg-surface-50 active:scale-[0.98]"
                     >
                         <svg className="w-5 h-5 min-[320px]:w-4 min-[320px]:h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                             <path

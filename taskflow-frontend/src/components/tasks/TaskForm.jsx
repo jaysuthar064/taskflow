@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import API from "../../api/axios";
-import { Plus, X, AlignLeft, Type } from "lucide-react";
+import { Plus, X, AlignLeft, Type, Loader2 } from "lucide-react";
 
 const TaskForm = ({ onTaskCreated, onClose }) => {
     const [title, setTitle] = useState("");
@@ -25,15 +25,15 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
     };
 
     return (
-        <div className="card glass p-4 sm:p-6 w-full max-w-lg mx-auto">
+        <div className="card glass p-3.5 sm:p-6 w-full max-w-lg mx-auto">
             <div className="flex justify-between items-center mb-5 sm:mb-6">
                 <h2 className="text-xl font-bold text-surface-900 flex items-center">
                     <Plus className="mr-2 text-primary-600" size={24} />
                     New Task
                 </h2>
                 {onClose && (
-                    <button onClick={onClose} className="p-2 hover:bg-surface-100 rounded-full transition-colors text-surface-400">
-                        <X size={20} />
+                    <button onClick={onClose} className="p-1.5 hover:bg-surface-100 rounded-full transition-colors text-surface-400 flex-shrink-0">
+                        <X size={18} />
                     </button>
                 )}
             </div>
@@ -47,7 +47,7 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                     <input
                         type="text"
                         placeholder="What needs to be done?"
-                        className="input-field py-2.5 sm:py-3 text-base sm:text-lg"
+                        className="input-field py-2 sm:py-3 text-sm sm:text-lg"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
@@ -61,7 +61,7 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                     </label>
                     <textarea
                         placeholder="Add more details about this task..."
-                        className="input-field min-h-[100px] sm:min-h-[120px] resize-none py-2.5 sm:py-3"
+                        className="input-field min-h-[80px] sm:min-h-[120px] resize-none py-2 sm:py-3 text-xs sm:text-sm"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
@@ -73,7 +73,12 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                         disabled={isLoading}
                         className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base shadow-xl shadow-primary-500/20 order-1 sm:order-none"
                     >
-                        {isLoading ? "Creating..." : "Create Task"}
+                        {isLoading ? (
+                            <div className="flex items-center justify-center">
+                                <Loader2 size={18} className="mr-2 animate-spin" />
+                                <span>Creating...</span>
+                            </div>
+                        ) : "Create Task"}
                     </button>
                     {onClose && (
                         <button

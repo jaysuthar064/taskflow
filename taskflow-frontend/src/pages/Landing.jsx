@@ -99,8 +99,8 @@ const Landing = () => {
               <Zap size={14} className="mr-2 animate-pulse" />
               Build the future of your workflow
             </motion.div>
-            <h1 className="text-4xl min-[500px]:text-5xl lg:text-7xl font-extrabold text-surface-900 tracking-tighter leading-[1.05]">
-              Manage Tasks with <br />
+            <h1 className="text-3xl min-[400px]:text-4xl min-[500px]:text-5xl lg:text-7xl font-extrabold text-surface-900 tracking-tighter leading-[1.1] sm:leading-[1.05]">
+              Manage Tasks with <br className="hidden min-[400px]:block" />
               <motion.span 
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 animate={{ clipPath: "inset(0 0% 0 0)" }}
@@ -110,7 +110,7 @@ const Landing = () => {
                 Unmatched Precision
               </motion.span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-surface-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
+            <p className="text-sm sm:text-lg lg:text-xl text-surface-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium px-2 sm:px-0">
               Join elite teams using the project tool that merges world-class design with high-performance engineering.
             </p>
             <div className="flex flex-col min-[450px]:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
@@ -122,19 +122,16 @@ const Landing = () => {
               </motion.div>
             </div>
             
-            <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                transition={{ delay: 1.5 }}
-                className="flex flex-col space-y-4 pt-10"
-            >
-                <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Trusted by industry leaders</span>
-                <div className="flex items-center justify-center lg:justify-start space-x-8 grayscale opacity-40">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" className="h-6 hover:opacity-100 transition-opacity" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" alt="IBM" className="h-6 hover:opacity-100 transition-opacity" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="Netflix" className="h-6 hover:opacity-100 transition-opacity" />
+            <div className="flex flex-col space-y-4 pt-10">
+                <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Designed for high-performance individuals</span>
+                <div className="flex items-center justify-center lg:justify-start space-x-4 opacity-50">
+                    <CheckCircle2 size={16} className="text-primary-500" />
+                    <span className="text-xs font-bold text-surface-600">Zero Distraction</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-surface-300" />
+                    <CheckCircle2 size={16} className="text-primary-500" />
+                    <span className="text-xs font-bold text-surface-600">Unlimited Tasks</span>
                 </div>
-            </motion.div>
+            </div>
           </motion.div>
           
           <motion.div 
@@ -221,13 +218,13 @@ const Landing = () => {
                 key={i}
                 variants={fadeInUp}
                 whileHover={{ y: -12 }}
-                className="card p-10 group hover:border-primary-100 transition-all duration-500 border-surface-200/40 shadow-sm"
+                className="card p-6 sm:p-10 group hover:border-primary-100 transition-all duration-500 border-surface-200/40 shadow-sm"
               >
-                <div className={`w-16 h-16 ${feature.color} rounded-2xl flex items-center justify-center mb-8 border border-surface-100 group-hover:rotate-[10deg] transition-transform duration-500`}>
-                  {feature.icon}
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 ${feature.color} rounded-2xl flex items-center justify-center mb-6 sm:mb-8 border border-surface-100 group-hover:rotate-[10deg] transition-transform duration-500`}>
+                  {React.cloneElement(feature.icon, { size: 24 })}
                 </div>
-                <h3 className="text-2xl font-bold text-surface-900 mb-4 group-hover:text-primary-600 transition-colors">{feature.title}</h3>
-                <p className="text-surface-500 leading-relaxed font-medium">{feature.desc}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-surface-900 mb-3 sm:mb-4 group-hover:text-primary-600 transition-colors">{feature.title}</h3>
+                <p className="text-sm sm:text-base text-surface-500 leading-relaxed font-medium">{feature.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -254,7 +251,7 @@ const Landing = () => {
           <div className="relative z-10 space-y-6 sm:space-y-8">
             <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">Your best work <br /> starts here.</h2>
             <p className="text-base sm:text-lg md:text-2xl text-surface-400 max-w-3xl mx-auto leading-relaxed font-medium">
-              Join thousands of makers and engineering masters building better with TaskFlow.
+              Take control of your workflow with a tool built for precision and speed.
             </p>
             <div className="pt-4 flex justify-center">
               <Link 
@@ -285,7 +282,7 @@ const Landing = () => {
             </div>
             <div className="space-y-2 text-center md:text-left">
                 <p className="text-sm text-surface-500 max-w-[200px]">
-                The world's most beautiful project management tool.
+                A powerful, design-first project management tool.
                 </p>
                 <a href="mailto:jayantisuthar094@gmail.com" className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors block">
                     jayantisuthar094@gmail.com

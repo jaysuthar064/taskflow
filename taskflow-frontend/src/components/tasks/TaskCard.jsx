@@ -3,7 +3,7 @@ import { CheckCircle2, Circle, Clock, Trash2, Calendar } from "lucide-react";
 
 const TaskCard = ({ task, onDelete, onToggle }) => {
   return (
-    <div className="bg-white border border-surface-200 rounded p-3.5 shadow-sm hover:border-primary-400 transition-all group flex flex-col space-y-3">
+    <div className="bg-white border border-surface-200 rounded p-3 sm:p-3.5 shadow-sm hover:border-primary-400 transition-all group flex flex-col space-y-2 sm:space-y-3">
       <div className="flex justify-between items-start gap-3">
         <h3 className={`text-sm font-semibold leading-snug transition-all ${
           task.completed ? "text-surface-400 line-through" : "text-surface-900"
@@ -35,9 +35,6 @@ const TaskCard = ({ task, onDelete, onToggle }) => {
             <span>{new Date(task.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
           
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">
-            TASK-{task._id?.slice(-4).toUpperCase() || "NEW"}
-          </span>
         </div>
 
         <button
