@@ -14,7 +14,7 @@ const getBaseURL = () => {
   const normalized = rawURL.replace(/\/+$/, "");
   const baseApi = normalized.endsWith("/api/v1") ? normalized : `${normalized}/api/v1`;
   
-  return `${baseApi}/`;
+  return baseApi;
 };
 
 export const baseURL = getBaseURL();
