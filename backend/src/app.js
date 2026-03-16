@@ -10,29 +10,43 @@ const app = express();
 app.set("trust proxy", 1);
 
 //Security middleware 
-app.use(helmet());
-app.use(cors());
+// app.use(helmet()); // Temporarily disabled for debugging
+app.use(cors({ origin: true, credentials: true }));
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100
 });
 
-app.use(limiter);
+// app.use(limiter); // Disabled for debugging to avoid 429 errors
+
+// Request Logger
+app.use((req, res, next) => {
+    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.originalUrl}`);
+    next();
+});
 
 //Body Parser
 app.use(express.json());
 app.use(passport.initialize());
 
 //Routes
-app.use("/api/v1/", authRoutes);
-app.use("/api/v1/",taskRoutes);
+app.use("/api/v1", authRoutes);
+app.use("/api/v1", taskRoutes);
 
 //Health Check Route
 app.get("/", (req, res) => {
     res.status(200).json({
         status: "success",
         message: "Taskflow api is working"
+    });
+});
+
+// 404 Handler for API
+app.use("/api/v1", (req, res) => {
+    res.status(404).json({
+        status: "fail",
+        message: `Route ${req.originalUrl} not found on this server!`
     });
 });
 

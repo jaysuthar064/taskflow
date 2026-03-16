@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Task from "../models/taskModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Notification from "../models/Notification.js";
 
 //Register Controller
 export const registerUser = async (req, res) => {
@@ -111,3 +112,98 @@ export const googleAuthCallback = async (req, res) => {
         });
     }
 }
+
+// Update Profile Controller
+export const updateProfile = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error updating profile" });
+    }
+}
+
+// Get Notifications Controller
+export const getNotifications = async (req, res) => {
+    try {
+        const notifications = await Notification.find({ user: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(20);
+        res.status(200).json({ data: notifications });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching notifications" });
+    }
+}
+
+// Clear Notifications Controller
+export const clearNotifications = async (req, res) => {
+    try {
+        await Notification.deleteMany({ user: req.user._id });
+        res.status(200).json({ message: "Notifications cleared successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error clearing notifications" });
+    }
+}
+
+// Get Productivity Stats Controller
+export const getProductivityStats = async (req, res) => {
+    try {
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            last7Days.push(date);
+        }
+
+        const stats = await Promise.all(last7Days.map(async (date) => {
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            const completedCount = await Task.countDocuments({
+                user: req.user._id,
+                completed: true,
+                updatedAt: { $gte: date, $lt: nextDate }
+            });
+
+            const createdCount = await Task.countDocuments({
+                user: req.user._id,
+                createdAt: { $gte: date, $lt: nextDate }
+            });
+
+            return {
+                day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                date: date.toISOString().split('T')[0],
+                completed: completedCount,
+                created: createdCount
+            };
+        }));
+
+        res.status(200).json({ data: stats });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching productivity stats" });
+    }
+}
+

@@ -1,4 +1,5 @@
 import Task from "../models/taskModel.js";
+import Notification from "../models/Notification.js";
 import mongoose from "mongoose";
 
 //Create Task Controller
@@ -15,6 +16,13 @@ export const taskCreate=async(req,res)=>{
         });
 
         if (createTask){
+            // Create real-time notification
+            await Notification.create({
+                user,
+                message: `New task created: ${title}`,
+                type: "task_created"
+            });
+
             res.status(201).json({
                 message:`New task created`,
                 data:createTask
@@ -123,6 +131,15 @@ export const updateTask= async(req,res)=>{
         if(updateTask.user.toString() !== req.user._id.toString()){
             return res.status(403).json({
                 message:`You are not authorized to edit this task`
+            });
+        }
+
+        // Create notification if completed status changed
+        if (req.body.completed === true) {
+            await Notification.create({
+                user: updateTask.user,
+                message: `Task completed: ${updateTask.title}`,
+                type: "task_completed"
             });
         }
 

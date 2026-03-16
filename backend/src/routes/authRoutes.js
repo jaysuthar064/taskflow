@@ -1,5 +1,5 @@
 import express from "express";
-import { loginUser, registerUser, googleAuthCallback } from "../controllers/authControllers.js";
+import { loginUser, registerUser, googleAuthCallback, updateProfile, getNotifications, getProductivityStats, clearNotifications } from "../controllers/authControllers.js";
 import { protect } from "../middleware/authMiddleware.js";
 import passport from "passport";
 
@@ -23,5 +23,10 @@ router.get("/profile",protect,(req,res)=>{
         user:req.user
     });
 });
+
+router.put("/profile", protect, updateProfile);
+router.get("/notifications", protect, getNotifications);
+router.delete("/notifications", protect, clearNotifications);
+router.get("/productivity-stats", protect, getProductivityStats);
 
 export default router;
