@@ -30,11 +30,23 @@ const TaskCard = ({ task, onDelete, onToggle }) => {
 
       <div className="flex items-center justify-between pt-2">
         <div className="flex items-center space-x-2">
-          <div className="flex items-center text-[10px] font-medium text-surface-400 bg-surface-50 px-1.5 py-0.5 rounded border border-surface-100">
-            <Calendar size={10} className="mr-1" />
-            <span>{new Date(task.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-          </div>
-          
+          {task.reminder && (
+            <div className={`flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+              new Date(task.reminder) < new Date() && !task.completed
+                ? "text-red-600 bg-red-50 border-red-100"
+                : "text-surface-400 bg-surface-50 border-surface-100"
+            }`}>
+              <Clock size={10} className="mr-1" />
+              <span>
+                {new Date(task.reminder).toLocaleString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+          )}
         </div>
 
         <button

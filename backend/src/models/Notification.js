@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["task_created", "task_completed", "system"],
+    enum: ["task_created", "task_completed", "reminder_due", "system"],
     default: "system"
   }
 }, {

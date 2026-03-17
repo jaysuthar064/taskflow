@@ -5,14 +5,16 @@ import mongoose from "mongoose";
 //Create Task Controller
 export const taskCreate=async(req,res)=>{
     try{
-        const {title,description,completed}=req.body;
+        const {title,description,completed,reminder}=req.body;
         const user= req.user._id;
 
         const createTask= await Task.create({
             title,
             description,
             user,
-            completed
+            completed,
+            reminder,
+            reminderNotificationSentAt: null
         });
 
         if (createTask){
@@ -58,6 +60,10 @@ export const getTask=async(req,res)=>{
             ];
         }
 
+        if(req.query.hasReminder === "true"){
+            filter.reminder = { $ne: null };
+        }
+
         let query = Task.find(filter)
 
         //Sorting Task
@@ -69,10 +75,13 @@ export const getTask=async(req,res)=>{
         }
 
         //Pagination
-        const page = Number(req.query.page) || 1;
-        const limit = Math.min(Number(req.query.limit) || 10 , 50);
-        const skip = (page -1) * limit;
-        query = query.skip(skip).limit(limit);
+        const shouldPaginate = req.query.all !== "true";
+        if (shouldPaginate) {
+            const page = Number(req.query.page) || 1;
+            const limit = Math.min(Number(req.query.limit) || 10 , 50);
+            const skip = (page -1) * limit;
+            query = query.skip(skip).limit(limit);
+        }
 
         const tasks = await query;
 
@@ -116,26 +125,38 @@ export const getSingleTask=async(req,res)=>{
 //Update Task Controller
 export const updateTask= async(req,res)=>{
     try{
-        const updateTask= await Task.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {new:true}
-        );
+        const existingTask = await Task.findById(req.params.id);
 
-        if(!updateTask){
+        if(!existingTask){
             return res.status(404).json({
                 message:`Task not found`
             });
         }
 
-        if(updateTask.user.toString() !== req.user._id.toString()){
+        if(existingTask.user.toString() !== req.user._id.toString()){
             return res.status(403).json({
                 message:`You are not authorized to edit this task`
             });
         }
 
+        const updates = { ...req.body };
+
+        if (Object.prototype.hasOwnProperty.call(updates, "reminder")) {
+            updates.reminderNotificationSentAt = null;
+        }
+
+        if (updates.completed === true) {
+            updates.reminderNotificationSentAt = existingTask.reminderNotificationSentAt;
+        }
+
+        const updateTask= await Task.findByIdAndUpdate(
+            req.params.id,
+            updates,
+            {new:true}
+        );
+
         // Create notification if completed status changed
-        if (req.body.completed === true) {
+        if (req.body.completed === true && existingTask.completed !== true) {
             await Notification.create({
                 user: updateTask.user,
                 message: `Task completed: ${updateTask.title}`,

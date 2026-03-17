@@ -10,6 +10,9 @@ import { Plus, X } from "lucide-react";
 import MyTasksView from "../components/dashboard/MyTasksView";
 import SettingsView from "../components/dashboard/SettingsView";
 import ProductivityView from "../components/dashboard/ProductivityView";
+import NotificationHandler from "../components/tasks/NotificationHandler";
+import { Bell } from "lucide-react";
+import ReminderList from "../components/tasks/ReminderList";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -20,12 +23,56 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const loadTasks = async ({ withLoader = false, canUpdate = () => true } = {}) => {
+    if (!localStorage.getItem("token")) {
+      if (canUpdate()) {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    if (withLoader && canUpdate()) {
+      setIsLoading(true);
+    }
+
+    try {
+      const response = await API.get("/tasks?all=true&sort=-createdAt");
+      const taskList = response.data?.data ?? response.data?.tasks ?? [];
+      if (canUpdate()) {
+        setTasks(Array.isArray(taskList) ? taskList : []);
+      }
+    } catch (error) {
+      console.error("Dashboard: Error fetching tasks", error);
+      if (canUpdate()) {
+        setTasks([]);
+      }
+    } finally {
+      if (withLoader && canUpdate()) {
+        setTimeout(() => {
+          if (canUpdate()) {
+            setIsLoading(false);
+          }
+        }, 800);
+      }
+    }
+  };
+
+  const matchesSearch = (task) =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const filteredTasks = tasks.filter(matchesSearch);
+  const reminderTasks = tasks
+    .filter((task) => task.reminder && !task.completed)
+    .sort((a, b) => new Date(a.reminder) - new Date(b.reminder));
   
-  const handleTaskCreated = (newTask) => {
+  const handleTaskCreated = async (newTask) => {
     if (!newTask) return;
     setTasks((prevTasks) => [newTask, ...prevTasks]);
     setStatsRefreshKey((prevKey) => prevKey + 1);
     setIsTaskModalOpen(false);
+    await loadTasks();
   }
 
   const handleToggleTask = async (task) => {
@@ -88,23 +135,11 @@ const Dashboard = () => {
       return;
     }
 
-    API.get("/tasks")
-      .then((response) => {
-        const taskList = response.data?.data ?? response.data?.tasks ?? [];
-        if (isMounted) {
-          setTasks(Array.isArray(taskList) ? taskList : []);
-          setTimeout(() => {
-            setIsLoading(false);
-          }, 800); // Smooth transition
-        }
-      })
-      .catch((error) => {
-        console.error("Dashboard: Error fetching tasks", error);
-        if (isMounted) {
-          setTasks([]);
-          setIsLoading(false);
-        }
-      });
+    loadTasks({ withLoader: true, canUpdate: () => isMounted }).catch(() => {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
 
     return () => { isMounted = false; };
   }, []);
@@ -124,6 +159,8 @@ const Dashboard = () => {
         setActiveView={setActiveView}
       />
 
+      <NotificationHandler tasks={tasks} />
+      
       {/* Main Content */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
         isSidebarHidden ? "ml-0" : "lg:ml-64"
@@ -153,13 +190,29 @@ const Dashboard = () => {
                       <span className="text-primary-600">Active Tasks</span>
                     </nav>
                   </div>
-                  <button 
-                    onClick={() => setIsTaskModalOpen(true)}
-                    className="btn-primary hidden sm:flex items-center shadow-sm w-full sm:w-auto"
-                  >
-                    <Plus size={16} className="mr-2" />
-                    <span className="text-xs uppercase tracking-wider font-bold">New Task</span>
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {window.Notification && Notification.permission !== "granted" && (
+                        <button 
+                            onClick={async () => {
+                                const permission = await Notification.requestPermission();
+                                if (permission === "granted") {
+                                    alert("Notifications Enabled!");
+                                }
+                            }}
+                            className="flex-1 sm:flex-none px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-amber-100 transition-colors flex items-center justify-center"
+                        >
+                            <Bell size={14} className="mr-2 animate-bounce" />
+                            Enable Notifications
+                        </button>
+                    )}
+                    <button 
+                        onClick={() => setIsTaskModalOpen(true)}
+                        className="btn-primary hidden sm:flex items-center shadow-sm"
+                    >
+                        <Plus size={16} className="mr-2" />
+                        <span className="text-xs uppercase tracking-wider font-bold">New Task</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Stats Overview */}
@@ -170,10 +223,7 @@ const Dashboard = () => {
                 {/* Task List / Kanban */}
                 <div className="pt-2">
                   <TaskList 
-                    tasks={tasks.filter(t => 
-                      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      t.description?.toLowerCase().includes(searchQuery.toLowerCase())
-                    )} 
+                    tasks={filteredTasks} 
                     onDelete={handleDeleteTask} 
                     onToggle={handleToggleTask} 
                   />
@@ -183,10 +233,7 @@ const Dashboard = () => {
 
             {activeView === "mytasks" && (
               <MyTasksView 
-                tasks={tasks.filter(t => 
-                  (t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  t.description?.toLowerCase().includes(searchQuery.toLowerCase()))
-                )} 
+                tasks={filteredTasks} 
                 onDelete={handleDeleteTask} 
                 onToggle={handleToggleTask} 
               />
@@ -197,14 +244,19 @@ const Dashboard = () => {
             {activeView === "settings" && <SettingsView />}
 
             {activeView === "reminders" && (
-                <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8 bg-white rounded-2xl border border-surface-200">
-                    <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 mb-4">
-                        <Bell size={32} />
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div>
+                        <h2 className="text-xl font-bold text-surface-900 tracking-tight">Upcoming Reminders</h2>
+                        <p className="text-sm text-surface-500 mt-1">Don't miss a beat with your scheduled tasks.</p>
                     </div>
-                    <h2 className="text-xl font-bold text-surface-900">Reminders</h2>
-                    <p className="text-sm text-surface-500 mt-2 max-w-sm">
-                        Smart reminders are coming soon to keep you on track with your deadlines!
-                    </p>
+                    
+                    <div className="bg-white rounded-2xl border border-surface-200 overflow-hidden">
+                        <ReminderList
+                          tasks={reminderTasks}
+                          onDelete={handleDeleteTask}
+                          onToggle={handleToggleTask}
+                        />
+                    </div>
                 </div>
             )}
           </div>

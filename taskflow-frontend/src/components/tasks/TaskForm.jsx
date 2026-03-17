@@ -1,21 +1,37 @@
 import React, { useState } from "react";
 import API from "../../api/axios";
-import { Plus, X, AlignLeft, Type, Loader2 } from "lucide-react";
+import { Plus, X, AlignLeft, Type, Loader2, Clock } from "lucide-react";
 
 const TaskForm = ({ onTaskCreated, onClose }) => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [reminder, setReminder] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await API.post("/tasks", { title, description });
+            const reminderDate = reminder ? new Date(reminder) : null;
+
+            if (
+                reminderDate &&
+                "Notification" in window &&
+                Notification.permission === "default"
+            ) {
+                await Notification.requestPermission();
+            }
+
+            const response = await API.post("/tasks", { 
+                title, 
+                description, 
+                reminder: reminderDate ? reminderDate.toISOString() : null
+            });
             const createdTask = response.data?.data ?? response.data?.task ?? null;
             if (onTaskCreated) onTaskCreated(createdTask);
             setTitle("");
             setDescription("");
+            setReminder("");
             if (onClose) onClose();
         } catch (error) {
             alert(error.response?.data?.message || "Task Creation Failed");
@@ -64,6 +80,19 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
                         className="input-field min-h-[80px] sm:min-h-[120px] resize-none py-2 sm:py-3 text-xs sm:text-sm"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-semibold text-surface-700 ml-1 flex items-center">
+                        <Clock size={16} className="mr-2" />
+                        Reminder
+                    </label>
+                    <input
+                        type="datetime-local"
+                        className="input-field py-2 sm:py-3 text-xs sm:text-sm"
+                        value={reminder}
+                        onChange={(e) => setReminder(e.target.value)}
                     />
                 </div>
 
