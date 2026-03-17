@@ -2,7 +2,13 @@ import axios from "axios";
 
 const getBaseURL = () => {
   const env = import.meta.env;
-  const rawURL = (env.VITE_API_URL || env.API_URL || env.BASE_URL || "").trim();
+  const rawURL = (
+    (env.DEV ? env.VITE_DEV_API_URL : env.VITE_API_URL) ||
+    env.VITE_API_URL ||
+    env.API_URL ||
+    env.BASE_URL ||
+    ""
+  ).trim();
   
   if (!rawURL) {
     if (env.PROD) {

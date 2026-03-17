@@ -10,15 +10,15 @@ const app = express();
 app.set("trust proxy", 1);
 
 //Security middleware 
-// app.use(helmet()); // Temporarily disabled for debugging
+app.use(helmet()); 
 app.use(cors({ origin: true, credentials: true }));
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100
+    max: 1000
 });
 
-// app.use(limiter); // Disabled for debugging to avoid 429 errors
+app.use(limiter); 
 
 // Request Logger
 app.use((req, res, next) => {
