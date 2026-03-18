@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from "react";
 import API from "../api/axios";
+import { getExistingPushSubscription, isPushSupported } from "../utils/pushNotifications";
 
 export const AuthContext = createContext();
 
@@ -48,7 +49,23 @@ const AuthProvider = ({ children }) => {
     setIsAuthReady(true);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    if (isPushSupported()) {
+      try {
+        const subscription = await getExistingPushSubscription();
+
+        if (subscription?.endpoint) {
+          await API.delete("/push/subscriptions", {
+            data: {
+              endpoint: subscription.endpoint,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Unable to detach push subscription during logout", error);
+      }
+    }
+
     try {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -78,7 +95,7 @@ const AuthProvider = ({ children }) => {
       }
     };
     fetchProfile();
-  }, [token, user]);
+  }, [token, user, logout]);
 
   const value = useMemo(() => ({ token, user, login, logout, isAuthReady }), [token, user, login, logout, isAuthReady]);
 

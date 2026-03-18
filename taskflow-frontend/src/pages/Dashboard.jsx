@@ -6,12 +6,10 @@ import StatsCards from "../components/tasks/dashboard/StatsCard";
 import TaskList from "../components/tasks/TaskList";
 import LoadingScreen from "../components/common/LoadingScreen";
 import API from "../api/axios";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import MyTasksView from "../components/dashboard/MyTasksView";
 import SettingsView from "../components/dashboard/SettingsView";
 import ProductivityView from "../components/dashboard/ProductivityView";
-import NotificationHandler from "../components/tasks/NotificationHandler";
-import { Bell } from "lucide-react";
 import ReminderList from "../components/tasks/ReminderList";
 
 const Dashboard = () => {
@@ -118,7 +116,7 @@ const Dashboard = () => {
     try {
       // 2. Server Sync
       await API.delete(`/tasks/${taskId}`);
-    } catch (error) {
+    } catch {
       // 3. Rollback
       setTasks(originalTasks);
       setStatsRefreshKey((prevKey) => prevKey - 1);
@@ -159,8 +157,6 @@ const Dashboard = () => {
         setActiveView={setActiveView}
       />
 
-      <NotificationHandler tasks={tasks} />
-      
       {/* Main Content */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
         isSidebarHidden ? "ml-0" : "lg:ml-64"
@@ -191,20 +187,6 @@ const Dashboard = () => {
                     </nav>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    {window.Notification && Notification.permission !== "granted" && (
-                        <button 
-                            onClick={async () => {
-                                const permission = await Notification.requestPermission();
-                                if (permission === "granted") {
-                                    alert("Notifications Enabled!");
-                                }
-                            }}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-amber-100 transition-colors flex items-center justify-center"
-                        >
-                            <Bell size={14} className="mr-2 animate-bounce" />
-                            Enable Notifications
-                        </button>
-                    )}
                     <button 
                         onClick={() => setIsTaskModalOpen(true)}
                         className="btn-primary hidden sm:flex items-center shadow-sm"

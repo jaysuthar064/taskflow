@@ -1,5 +1,6 @@
 import Notification from "../models/Notification.js";
 import Task from "../models/taskModel.js";
+import { sendPushToUser } from "./pushNotificationService.js";
 
 const REMINDER_INTERVAL_MS = 30 * 1000;
 
@@ -40,6 +41,18 @@ const processDueReminders = async () => {
             user: claimedTask.user,
             message: buildReminderMessage(claimedTask.title),
             type: "reminder_due"
+        });
+
+        await sendPushToUser({
+            userId: claimedTask.user,
+            title: `TaskFlow Reminder: ${claimedTask.title}`,
+            body: buildReminderMessage(claimedTask.title),
+            url: "/dashboard",
+            tag: `task-reminder-${claimedTask._id}`,
+            data: {
+                taskId: claimedTask._id.toString(),
+                type: "reminder_due"
+            }
         });
     }
 };

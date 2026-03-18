@@ -1,5 +1,6 @@
 import express from "express";
 import { loginUser, registerUser, googleAuthCallback, updateProfile, getNotifications, getProductivityStats, clearNotifications } from "../controllers/authControllers.js";
+import { deletePushSubscription, getPushPublicKeyController, savePushSubscription } from "../controllers/pushControllers.js";
 import { protect } from "../middleware/authMiddleware.js";
 import passport from "passport";
 
@@ -28,5 +29,8 @@ router.put("/profile", protect, updateProfile);
 router.get("/notifications", protect, getNotifications);
 router.delete("/notifications", protect, clearNotifications);
 router.get("/productivity-stats", protect, getProductivityStats);
+router.get("/push/public-key", getPushPublicKeyController);
+router.post("/push/subscriptions", protect, savePushSubscription);
+router.delete("/push/subscriptions", protect, deletePushSubscription);
 
 export default router;

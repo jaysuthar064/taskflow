@@ -14,14 +14,6 @@ const TaskForm = ({ onTaskCreated, onClose }) => {
         try {
             const reminderDate = reminder ? new Date(reminder) : null;
 
-            if (
-                reminderDate &&
-                "Notification" in window &&
-                Notification.permission === "default"
-            ) {
-                await Notification.requestPermission();
-            }
-
             const response = await API.post("/tasks", { 
                 title, 
                 description, 

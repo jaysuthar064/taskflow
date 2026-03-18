@@ -1,15 +1,60 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { User, Bell, Shield, Palette, Save, Loader2 } from "lucide-react";
+import { User, Bell, BellOff, Shield, Palette, Save, Loader2 } from "lucide-react";
 import API from "../../api/axios";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 const SettingsView = () => {
-  const { user, login } = useContext(AuthContext);
+  const { user, token, login } = useContext(AuthContext);
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const {
+    supported: pushSupported,
+    configured: pushConfigured,
+    subscribed: pushSubscribed,
+    permission: pushPermission,
+    loading: pushLoading,
+    ready: pushReady,
+    error: pushError,
+    enablePushNotifications,
+    disablePushNotifications
+  } = usePushNotifications();
+
+  const handlePushNotifications = async () => {
+    if (pushSubscribed) {
+      await disablePushNotifications();
+      return;
+    }
+
+    await enablePushNotifications();
+  };
+
+  const isPushActionDisabled =
+    pushLoading ||
+    !pushReady ||
+    (pushPermission === "denied" && !pushSubscribed) ||
+    (!pushConfigured && !pushSubscribed);
+
+  const pushButtonLabel = pushLoading
+    ? "Updating..."
+    : pushSubscribed
+      ? "Disable Notifications"
+      : pushPermission === "denied"
+        ? "Notifications Blocked"
+        : "Enable Notifications";
+
+  const pushStatusLabel = !pushSupported
+    ? "Unsupported"
+    : pushSubscribed
+      ? "Enabled"
+      : pushPermission === "denied"
+        ? "Blocked"
+        : pushConfigured
+          ? "Disabled"
+          : "Server Setup Needed";
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -19,10 +64,8 @@ const SettingsView = () => {
     try {
       const response = await API.put("/profile", { name, email, password });
       
-      // Update local context if provider supports it or refresh
       if (response.data.user) {
-        // Assuming your AuthContext might have a way to update user data
-        // For now, we'll just show success
+        login(token, response.data.user);
         setMessage({ text: "Profile updated successfully!", type: "success" });
         setPassword("");
       }
@@ -114,9 +157,83 @@ const SettingsView = () => {
         </form>
       </div>
 
+      <div className="max-w-2xl bg-white rounded-2xl border border-surface-200 overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-surface-100 flex items-center justify-between gap-4 bg-surface-50/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+              <Bell size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-surface-900">Notifications</h3>
+              <p className="text-xs text-surface-500">Manage browser push reminders for this device.</p>
+            </div>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${
+            pushSubscribed
+              ? "bg-green-100 text-green-700"
+              : pushPermission === "denied"
+                ? "bg-red-100 text-red-700"
+                : "bg-surface-100 text-surface-600"
+          }`}>
+            {pushStatusLabel}
+          </span>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="rounded-xl border border-surface-100 bg-surface-50 px-4 py-3">
+            <p className="text-sm font-semibold text-surface-900">Desktop reminder delivery</p>
+            <p className="mt-1 text-xs text-surface-600">
+              Enable this once per browser to receive reminders even when the TaskFlow tab is closed.
+            </p>
+            <p className="mt-2 text-[11px] text-surface-500">
+              Production note: deployed push notifications require HTTPS.
+            </p>
+          </div>
+
+          {pushError && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
+              {pushError}
+            </div>
+          )}
+
+          {!pushSupported && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-medium text-red-700">
+              This browser does not support push notifications.
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-surface-500">Current Device</p>
+              <p className="mt-1 text-sm font-semibold text-surface-900">
+                {pushSubscribed ? "Notifications are enabled for this browser." : "Notifications are currently off for this browser."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePushNotifications}
+              disabled={isPushActionDisabled || !pushSupported}
+              className={`inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border transition-colors ${
+                pushSubscribed
+                  ? "bg-surface-900 text-white border-surface-900 hover:bg-surface-800"
+                  : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+              } disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              {pushLoading ? (
+                <Loader2 size={14} className="mr-2 animate-spin" />
+              ) : pushSubscribed ? (
+                <BellOff size={14} className="mr-2" />
+              ) : (
+                <Bell size={14} className="mr-2" />
+              )}
+              {pushButtonLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4">
         {[
-          { title: "Notifications", icon: <Bell size={20} />, desc: "Manage how you receive alerts." },
           { title: "Security", icon: <Shield size={20} />, desc: "Update session and security settings." },
           { title: "Display", icon: <Palette size={20} />, desc: "Customize the look and feel." },
         ].map((section, i) => (
