@@ -32,8 +32,6 @@ self.addEventListener("push", (event) => {
     event.waitUntil(
         self.registration.showNotification(title, {
             body: payload.body || "You have a reminder waiting.",
-            icon: payload.icon || "/favicon.svg",
-            badge: payload.badge || "/favicon.svg",
             tag: payload.tag || "taskflow-reminder",
             renotify: true,
             data: {

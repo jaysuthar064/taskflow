@@ -80,8 +80,6 @@ export const sendPushToUser = async ({
     const payload = JSON.stringify({
         title,
         body,
-        icon: "/favicon.svg",
-        badge: "/favicon.svg",
         tag,
         url,
         data
