@@ -1,9 +1,104 @@
-self.addEventListener("install", () => {
-    self.skipWaiting();
+self.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open("taskflow-static-v1").then((cache) => {
+            return cache.addAll([
+                "/",
+                "/index.html",
+                "/offline.html",
+                "/app.webmanifest",
+                "/favicon.svg",
+                "/apple-touch-icon.png",
+                "/icon-192.png",
+                "/icon-512.png",
+                "/icon-maskable-512.png",
+                "/notification-icon-192.png",
+                "/notification-badge-96.png"
+            ]);
+        }).then(() => self.skipWaiting())
+    );
 });
 
 self.addEventListener("activate", (event) => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        (async () => {
+            const cacheKeys = await caches.keys();
+            await Promise.all(
+                cacheKeys.map((cacheKey) => {
+                    if (!["taskflow-static-v1", "taskflow-runtime-v1"].includes(cacheKey)) {
+                        return caches.delete(cacheKey);
+                    }
+
+                    return Promise.resolve();
+                })
+            );
+
+            if (self.registration.navigationPreload) {
+                await self.registration.navigationPreload.enable();
+            }
+
+            await self.clients.claim();
+        })()
+    );
+});
+
+const cacheRuntimeAsset = async (request, response) => {
+    const cache = await caches.open("taskflow-runtime-v1");
+    await cache.put(request, response.clone());
+    return response;
+};
+
+self.addEventListener("fetch", (event) => {
+    const { request } = event;
+
+    if (request.method !== "GET") {
+        return;
+    }
+
+    const requestURL = new URL(request.url);
+
+    if (requestURL.origin !== self.location.origin) {
+        return;
+    }
+
+    if (request.mode === "navigate") {
+        event.respondWith(
+            (async () => {
+                try {
+                    const preloadResponse = await event.preloadResponse;
+
+                    if (preloadResponse) {
+                        return cacheRuntimeAsset(request, preloadResponse);
+                    }
+
+                    const networkResponse = await fetch(request);
+                    return cacheRuntimeAsset(request, networkResponse);
+                } catch {
+                    return (
+                        await caches.match(request) ||
+                        await caches.match("/") ||
+                        await caches.match("/offline.html")
+                    );
+                }
+            })()
+        );
+
+        return;
+    }
+
+    if (!["script", "style", "image", "font", "manifest"].includes(request.destination)) {
+        return;
+    }
+
+    event.respondWith(
+        (async () => {
+            const cachedResponse = await caches.match(request);
+            const fetchPromise = fetch(request)
+                .then((networkResponse) => cacheRuntimeAsset(request, networkResponse))
+                .catch(() => cachedResponse);
+
+            return cachedResponse || fetchPromise;
+        })()
+    );
 });
 
 const getNotificationPayload = (event) => {

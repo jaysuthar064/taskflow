@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { User, Bell, BellOff, Shield, Palette, Save, Loader2 } from "lucide-react";
+import { User, Bell, BellOff, Download, Shield, Palette, Save, Loader2 } from "lucide-react";
 import API from "../../api/axios";
 
-const SettingsView = ({ notificationSettings }) => {
+const SettingsView = ({ notificationSettings, installSettings }) => {
   const { user, token, login } = useContext(AuthContext);
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -21,6 +21,13 @@ const SettingsView = ({ notificationSettings }) => {
     enablePushNotifications,
     disablePushNotifications
   } = notificationSettings;
+  const {
+    canInstall,
+    isInstalled,
+    isInstalling,
+    installApp,
+    installHint
+  } = installSettings;
 
   const handlePushNotifications = async () => {
     if (pushSubscribed) {
@@ -54,6 +61,11 @@ const SettingsView = ({ notificationSettings }) => {
         : pushConfigured
           ? "Disabled"
           : "Server Setup Needed";
+  const installStatusLabel = isInstalled
+    ? "Installed"
+    : canInstall
+      ? "Ready"
+      : "Use Menu";
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -226,6 +238,73 @@ const SettingsView = ({ notificationSettings }) => {
                 <Bell size={14} className="mr-2" />
               )}
               {pushButtonLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl bg-white rounded-2xl border border-surface-200 overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-surface-100 flex items-center justify-between gap-4 bg-surface-50/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center">
+              <Download size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-surface-900">Install App</h3>
+              <p className="text-xs text-surface-500">Add TaskFlow to your home screen and app drawer.</p>
+            </div>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${
+            isInstalled
+              ? "bg-green-100 text-green-700"
+              : canInstall
+                ? "bg-primary-100 text-primary-700"
+                : "bg-surface-100 text-surface-600"
+          }`}>
+            {installStatusLabel}
+          </span>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="rounded-xl border border-surface-100 bg-surface-50 px-4 py-3">
+            <p className="text-sm font-semibold text-surface-900">App-style experience</p>
+            <p className="mt-1 text-xs text-surface-600">
+              Installing TaskFlow gives you standalone full-screen launching and can make mobile reminders feel more native.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-surface-100 bg-white px-4 py-3">
+            <p className="text-sm font-semibold text-surface-900">
+              {isInstalled ? "TaskFlow is already installed." : "Install status"}
+            </p>
+            <p className="mt-1 text-xs text-surface-600">
+              {installHint}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-surface-500">Current Device</p>
+              <p className="mt-1 text-sm font-semibold text-surface-900">
+                {isInstalled
+                  ? "TaskFlow opens like an installed app on this device."
+                  : canInstall
+                    ? "TaskFlow is ready to install from this browser."
+                    : "Use your browser menu if the install prompt is not available yet."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={installApp}
+              disabled={!canInstall || isInstalled || isInstalling}
+              className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border bg-primary-600 text-white border-primary-600 hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {isInstalling ? (
+                <Loader2 size={14} className="mr-2 animate-spin" />
+              ) : (
+                <Download size={14} className="mr-2" />
+              )}
+              {isInstalled ? "Installed" : canInstall ? "Install App" : "Install From Menu"}
             </button>
           </div>
         </div>

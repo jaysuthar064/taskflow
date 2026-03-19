@@ -14,7 +14,7 @@ import ReminderList from "../components/tasks/ReminderList";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import { useMobileScheduledReminders } from "../hooks/useMobileScheduledReminders";
 
-const Dashboard = () => {
+const Dashboard = ({ installSettings }) => {
   const [tasks, setTasks] = useState([]);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
@@ -232,7 +232,10 @@ const Dashboard = () => {
             {activeView === "productivity" && <ProductivityView setActiveView={setActiveView} />}
 
             {activeView === "settings" && (
-              <SettingsView notificationSettings={notificationSettings} />
+              <SettingsView
+                notificationSettings={notificationSettings}
+                installSettings={installSettings}
+              />
             )}
 
             {activeView === "reminders" && (

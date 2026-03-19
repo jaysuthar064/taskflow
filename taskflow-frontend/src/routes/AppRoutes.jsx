@@ -10,10 +10,12 @@ import About from "../pages/About";
 import GoogleCallback from "../pages/GoogleCallback";
 import ProtectedRoutes from "./ProtectedRoute";
 import { AuthContext } from "../context/AuthContext";
+import { useAppInstallPrompt } from "../hooks/useAppInstallPrompt";
 
 
 const AppRoutes = ()=>{
     const { token } = useContext(AuthContext);
+    const installSettings = useAppInstallPrompt();
 
     return(
         <Routes>
@@ -22,7 +24,7 @@ const AppRoutes = ()=>{
             <Route path="/register" element={token ? <Navigate to="/dashboard" replace /> : <Register />} />
             <Route path="/dashboard"
              element={<ProtectedRoutes>
-                <Dashboard />
+                <Dashboard installSettings={installSettings} />
              </ProtectedRoutes>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
