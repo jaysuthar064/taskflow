@@ -2,9 +2,8 @@ import React, { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { User, Bell, BellOff, Shield, Palette, Save, Loader2 } from "lucide-react";
 import API from "../../api/axios";
-import { usePushNotifications } from "../../hooks/usePushNotifications";
 
-const SettingsView = () => {
+const SettingsView = ({ notificationSettings }) => {
   const { user, token, login } = useContext(AuthContext);
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -21,7 +20,7 @@ const SettingsView = () => {
     error: pushError,
     enablePushNotifications,
     disablePushNotifications
-  } = usePushNotifications();
+  } = notificationSettings;
 
   const handlePushNotifications = async () => {
     if (pushSubscribed) {
@@ -181,12 +180,12 @@ const SettingsView = () => {
 
         <div className="p-6 space-y-4">
           <div className="rounded-xl border border-surface-100 bg-surface-50 px-4 py-3">
-            <p className="text-sm font-semibold text-surface-900">Desktop reminder delivery</p>
+            <p className="text-sm font-semibold text-surface-900">Browser reminder delivery</p>
             <p className="mt-1 text-xs text-surface-600">
               Enable this once per browser to receive reminders even when the TaskFlow tab is closed.
             </p>
             <p className="mt-2 text-[11px] text-surface-500">
-              Production note: deployed push notifications require HTTPS.
+              Android Chrome can use local scheduled reminders when supported. Production still requires HTTPS.
             </p>
           </div>
 

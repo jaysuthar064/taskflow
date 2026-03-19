@@ -83,6 +83,7 @@ export const sendPushToUser = async ({
         icon: "/notification-icon-192.png",
         badge: "/notification-badge-96.png",
         tag,
+        renotify: false,
         url,
         data
     });

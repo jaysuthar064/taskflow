@@ -11,6 +11,8 @@ import MyTasksView from "../components/dashboard/MyTasksView";
 import SettingsView from "../components/dashboard/SettingsView";
 import ProductivityView from "../components/dashboard/ProductivityView";
 import ReminderList from "../components/tasks/ReminderList";
+import { usePushNotifications } from "../hooks/usePushNotifications";
+import { useMobileScheduledReminders } from "../hooks/useMobileScheduledReminders";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -21,6 +23,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+  const notificationSettings = usePushNotifications();
 
   const loadTasks = async ({ withLoader = false, canUpdate = () => true } = {}) => {
     if (!localStorage.getItem("token")) {
@@ -64,6 +67,11 @@ const Dashboard = () => {
   const reminderTasks = tasks
     .filter((task) => task.reminder && !task.completed)
     .sort((a, b) => new Date(a.reminder) - new Date(b.reminder));
+
+  useMobileScheduledReminders({
+    tasks,
+    enabled: notificationSettings.permission === "granted"
+  });
   
   const handleTaskCreated = async (newTask) => {
     if (!newTask) return;
@@ -223,7 +231,9 @@ const Dashboard = () => {
 
             {activeView === "productivity" && <ProductivityView setActiveView={setActiveView} />}
 
-            {activeView === "settings" && <SettingsView />}
+            {activeView === "settings" && (
+              <SettingsView notificationSettings={notificationSettings} />
+            )}
 
             {activeView === "reminders" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -35,7 +35,7 @@ self.addEventListener("push", (event) => {
             icon: payload.icon || "/notification-icon-192.png",
             badge: payload.badge || "/notification-badge-96.png",
             tag: payload.tag || "taskflow-reminder",
-            renotify: true,
+            renotify: Boolean(payload.renotify),
             data: {
                 url,
                 ...(payload.data || {})
