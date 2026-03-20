@@ -1,41 +1,65 @@
 import User from "../models/User.js";
 import Task from "../models/taskModel.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import Notification from "../models/Notification.js";
+import {
+    createAuthenticatedSession,
+    createTwoFactorChallengeToken,
+    getTwoFactorChallengeLifetimeSeconds
+} from "../utils/authTokens.js";
+import { serializeUser } from "../utils/userResponse.js";
+
+const PASSWORD_MIN_LENGTH = 8;
+
+const buildDuplicateEmailMessage = () => ({
+    message: "An account with that email already exists."
+});
+
+const ensurePasswordStrength = (password) => {
+    if (typeof password !== "string" || password.trim().length < PASSWORD_MIN_LENGTH) {
+        throw new Error(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long.`);
+    }
+};
 
 //Register Controller
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const userExixts = await User.findOne({ email });
-        if (userExixts) {
+        ensurePasswordStrength(password);
+
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        const userExists = await User.findOne({ email: normalizedEmail });
+
+        if (userExists) {
             return res.status(400).json({ message: `User already exists` });
         }
 
         const user = await User.create({
-            name,
-            email,
-            password
+            name: String(name || "").trim(),
+            email: normalizedEmail,
+            password: password.trim(),
+            passwordConfigured: true
         });
 
-        // Generate JWT token for immediate login
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE }
-        );
+        const { token } = await createAuthenticatedSession({
+            user,
+            req,
+            loginMethod: "password"
+        });
 
         res.status(201).json({
             message: `User registration successful`,
             token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-            }
-        })
+            user: serializeUser(user)
+        });
     } catch (error) {
+        if (error.message?.includes("Password must be")) {
+            return res.status(400).json({ message: error.message });
+        }
+
+        if (error.code === 11000) {
+            return res.status(400).json(buildDuplicateEmailMessage());
+        }
+
         res.status(500).json({ message: `Server error` });
     }
 }
@@ -44,10 +68,18 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email }).select("+password");
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        const user = await User.findOne({ email: normalizedEmail }).select("+password");
+
         if (!user) {
             return res.status(400).json({
                 message: `Invalid email and password`
+            });
+        }
+
+        if (user.passwordConfigured === false) {
+            return res.status(400).json({
+                message: "Password sign-in is not enabled for this account yet."
             });
         }
 
@@ -60,21 +92,36 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        //Generate JWT token
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE }
-        );
+        if (user.passwordConfigured !== true) {
+            user.passwordConfigured = true;
+            await user.save();
+        }
+
+        if (user.twoFactorEnabled) {
+            const challengeToken = createTwoFactorChallengeToken({
+                userId: user._id.toString(),
+                loginMethod: "password"
+            });
+
+            return res.status(200).json({
+                message: "Two-factor authentication is required.",
+                requiresTwoFactor: true,
+                challengeToken,
+                challengeLifetimeSeconds: getTwoFactorChallengeLifetimeSeconds(),
+                user: serializeUser(user)
+            });
+        }
+
+        const { token } = await createAuthenticatedSession({
+            user,
+            req,
+            loginMethod: "password"
+        });
 
         res.status(200).json({
             message: `Login successfully`,
             token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-            }
+            user: serializeUser(user)
         });
     } catch (error) {
         res.status(500).json({
@@ -87,24 +134,29 @@ export const loginUser = async (req, res) => {
 export const googleAuthCallback = async (req, res) => {
     try {
         const user = req.user;
-        
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE }
-        );
-
-        const userData = JSON.stringify({
-            id: user._id,
-            name: user.name,
-            email: user.email,
-        });
+        const serializedUser = serializeUser(user);
+        const userData = JSON.stringify(serializedUser);
 
         // Redirect to frontend with token and user data
         const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+
+        if (user.twoFactorEnabled) {
+            const challengeToken = createTwoFactorChallengeToken({
+                userId: user._id.toString(),
+                loginMethod: "google"
+            });
+            const redirectUrl = `${frontendUrl}/auth/callback?challengeToken=${challengeToken}&user=${encodeURIComponent(userData)}`;
+
+            return res.redirect(redirectUrl);
+        }
+
+        const { token } = await createAuthenticatedSession({
+            user,
+            req,
+            loginMethod: "google"
+        });
         const redirectUrl = `${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(userData)}`;
-        
+
         res.redirect(redirectUrl);
     } catch (error) {
         res.status(500).json({
@@ -113,34 +165,52 @@ export const googleAuthCallback = async (req, res) => {
     }
 }
 
-// Update Profile Controller
+export const getProfile = async (req, res) => {
+    return res.status(200).json({
+        message: "Protected route accessed",
+        user: serializeUser(req.user)
+    });
+};
+
 export const updateProfile = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email } = req.body;
         const user = await User.findById(req.user._id);
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(password, salt);
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+
+        if (normalizedEmail && normalizedEmail !== user.email) {
+            const existingUser = await User.findOne({
+                email: normalizedEmail,
+                _id: { $ne: user._id }
+            });
+
+            if (existingUser) {
+                return res.status(400).json({
+                    message: "That email address is already in use."
+                });
+            }
+
+            user.email = normalizedEmail;
         }
+
+        if (name) user.name = String(name).trim();
 
         await user.save();
 
         res.status(200).json({
             message: "Profile updated successfully",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-            }
+            user: serializeUser(user)
         });
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json(buildDuplicateEmailMessage());
+        }
+
         res.status(500).json({ message: "Error updating profile" });
     }
 }
@@ -206,4 +276,3 @@ export const getProductivityStats = async (req, res) => {
         res.status(500).json({ message: "Error fetching productivity stats" });
     }
 }
-

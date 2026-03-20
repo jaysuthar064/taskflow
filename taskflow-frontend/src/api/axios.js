@@ -29,14 +29,38 @@ const API = axios.create({
   baseURL,
 });
 
-API.interceptors.request.use((config)=>{
+API.interceptors.request.use((config) => {
     const token = localStorage.getItem("token");
 
-    if(token){
+    if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
-})
+});
+
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (
+            typeof window !== "undefined" &&
+            error.response?.status === 401
+        ) {
+            const requestUrl = error.config?.url || "";
+            const authExemptRoutes = [
+                "/login",
+                "/register",
+                "/two-factor/verify"
+            ];
+            const isAuthExempt = authExemptRoutes.some((route) => requestUrl.includes(route));
+
+            if (!isAuthExempt) {
+                window.dispatchEvent(new Event("taskflow:auth-expired"));
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
 
 export default API;
