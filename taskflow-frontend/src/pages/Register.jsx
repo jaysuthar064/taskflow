@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API, { baseURL } from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/auth-context";
+import Seo from "../components/common/Seo";
 
 const Register = () => {
     const [name, setName] = useState("");
@@ -28,6 +29,12 @@ const Register = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-surface-50 p-3 sm:p-6">
+            <Seo
+                title="Create Account | TaskFlow"
+                description="Create a TaskFlow account to organize tasks, reminders, and note cards in one workspace."
+                path="/register"
+                robots="noindex,nofollow"
+            />
             <div className="w-full max-w-md">
                 <div className="mb-6 sm:mb-10 text-center">
                     <h1 className="text-xl sm:text-3xl font-bold text-surface-900 tracking-tight mb-2">Create Account</h1>
@@ -64,7 +71,7 @@ const Register = () => {
                             <label className="text-sm font-medium text-surface-700 ml-1">Password</label>
                             <input
                                 type="password"
-                                placeholder="••••••••"
+                                placeholder="********"
                                 className="input-field"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}

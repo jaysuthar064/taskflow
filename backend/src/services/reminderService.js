@@ -1,6 +1,7 @@
 import Notification from "../models/Notification.js";
 import Task from "../models/taskModel.js";
 import { sendPushToUser } from "./pushNotificationService.js";
+import { getNextReminderOccurrence, REMINDER_REPEAT_VALUES } from "../utils/reminderSchedule.js";
 
 const REMINDER_INTERVAL_MS = 30 * 1000;
 
@@ -13,7 +14,7 @@ const processDueReminders = async () => {
         completed: false,
         reminder: { $ne: null, $lte: now },
         reminderNotificationSentAt: null
-    }).select("_id user title reminder");
+    }).select("_id user title reminder reminderRepeat reminderWeekdays");
 
     for (const task of dueTasks) {
         const claimedTask = await Task.findOneAndUpdate(
@@ -43,17 +44,39 @@ const processDueReminders = async () => {
             type: "reminder_due"
         });
 
-        await sendPushToUser({
-            userId: claimedTask.user,
-            title: `TaskFlow Reminder: ${claimedTask.title}`,
-            body: buildReminderMessage(claimedTask.title),
-            url: "/dashboard",
-            tag: `task-reminder-${claimedTask._id}`,
-            data: {
-                taskId: claimedTask._id.toString(),
-                type: "reminder_due"
+        try {
+            await sendPushToUser({
+                userId: claimedTask.user,
+                title: `TaskFlow Reminder: ${claimedTask.title}`,
+                body: buildReminderMessage(claimedTask.title),
+                url: "/dashboard",
+                tag: `task-reminder-${claimedTask._id}`,
+                data: {
+                    taskId: claimedTask._id.toString(),
+                    type: "reminder_due"
+                }
+            });
+        } catch (pushError) {
+            console.error(`[ReminderProcessor] Push delivery failed for task ${claimedTask._id}`, pushError);
+        }
+
+        if (claimedTask.reminderRepeat !== REMINDER_REPEAT_VALUES.ONCE) {
+            const nextReminder = getNextReminderOccurrence({
+                currentReminder: claimedTask.reminder,
+                reminderRepeat: claimedTask.reminderRepeat,
+                reminderWeekdays: claimedTask.reminderWeekdays,
+                now
+            });
+
+            if (nextReminder) {
+                await Task.findByIdAndUpdate(claimedTask._id, {
+                    $set: {
+                        reminder: nextReminder,
+                        reminderNotificationSentAt: null
+                    }
+                });
             }
-        });
+        }
     }
 };
 

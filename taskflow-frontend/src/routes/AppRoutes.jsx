@@ -9,7 +9,7 @@ import Terms from "../pages/Terms";
 import About from "../pages/About";
 import GoogleCallback from "../pages/GoogleCallback";
 import ProtectedRoutes from "./ProtectedRoute";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/auth-context";
 import { useAppInstallPrompt } from "../hooks/useAppInstallPrompt";
 
 

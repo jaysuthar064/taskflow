@@ -9,18 +9,17 @@ const getBaseURL = () => {
     env.BASE_URL ||
     ""
   ).trim();
-  
+
   if (!rawURL) {
     if (env.PROD) {
-      console.warn("⚠️ [Config] VITE_API_URL is missing in production! Falling back to localhost.");
+      console.warn("[Config] VITE_API_URL is missing in production. Falling back to localhost.");
     }
+
     return "http://localhost:5000/api/v1";
   }
 
   const normalized = rawURL.replace(/\/+$/, "");
-  const baseApi = normalized.endsWith("/api/v1") ? normalized : `${normalized}/api/v1`;
-  
-  return baseApi;
+  return normalized.endsWith("/api/v1") ? normalized : `${normalized}/api/v1`;
 };
 
 export const baseURL = getBaseURL();
@@ -30,37 +29,37 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
-    return config;
+  return config;
 });
 
 API.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (
-            typeof window !== "undefined" &&
-            error.response?.status === 401
-        ) {
-            const requestUrl = error.config?.url || "";
-            const authExemptRoutes = [
-                "/login",
-                "/register",
-                "/two-factor/verify"
-            ];
-            const isAuthExempt = authExemptRoutes.some((route) => requestUrl.includes(route));
+  (response) => response,
+  (error) => {
+    if (
+      typeof window !== "undefined" &&
+      error.response?.status === 401
+    ) {
+      const requestUrl = error.config?.url || "";
+      const authExemptRoutes = [
+        "/login",
+        "/register",
+        "/two-factor/verify"
+      ];
+      const isAuthExempt = authExemptRoutes.some((route) => requestUrl.includes(route));
 
-            if (!isAuthExempt) {
-                window.dispatchEvent(new Event("taskflow:auth-expired"));
-            }
-        }
-
-        return Promise.reject(error);
+      if (!isAuthExempt) {
+        window.dispatchEvent(new Event("taskflow:auth-expired"));
+      }
     }
+
+    return Promise.reject(error);
+  }
 );
 
 export default API;

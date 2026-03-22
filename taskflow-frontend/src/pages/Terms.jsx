@@ -1,10 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FileText, Scale, AlertOctagon, UserX, Globe } from "lucide-react";
+import Seo from "../components/common/Seo";
 
 const Terms = () => {
   return (
     <div className="min-h-screen bg-surface-50 p-6 md:p-12">
+      <Seo
+        title="Terms of Service | TaskFlow"
+        description="Review the terms that apply when using TaskFlow for task management, reminders, and workspace organization."
+        path="/terms"
+      />
       <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-3 duration-700">
         <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group">
           <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" />

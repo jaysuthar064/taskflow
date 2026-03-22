@@ -11,6 +11,9 @@ export const serializeUser = (user) => ({
     id: user?._id?.toString?.() || "",
     name: user?.name || "",
     email: user?.email || "",
+    role: user?.role || "user",
+    createdAt: user?.createdAt || null,
+    updatedAt: user?.updatedAt || null,
     loginMethods: getLoginMethods(user),
     security: {
         twoFactorEnabled: Boolean(user?.twoFactorEnabled)

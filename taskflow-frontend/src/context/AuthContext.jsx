@@ -1,9 +1,8 @@
-import React, { createContext, useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import API from "../api/axios";
 import { getExistingPushSubscription, isPushSupported } from "../utils/pushNotifications";
 import { clearPendingTwoFactorChallenge } from "../utils/twoFactorChallenge";
-
-export const AuthContext = createContext();
+import { AuthContext } from "./auth-context";
 
 const getStoredToken = () => {
   try {
@@ -36,18 +35,9 @@ const clearStoredAuth = () => {
 };
 
 const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(getStoredToken);
-  const [user, setUser] = useState(getStoredUser);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-
-  useEffect(() => {
-    // Check if we have credentials on initial mount
-    const storedToken = getStoredToken();
-    const storedUser = getStoredUser();
-    if (storedToken) setToken(storedToken);
-    if (storedUser) setUser(storedUser);
-    setIsAuthReady(true);
-  }, []);
+  const [token, setToken] = useState(() => getStoredToken());
+  const [user, setUser] = useState(() => getStoredUser());
+  const [isAuthReady, setIsAuthReady] = useState(true);
 
   const login = useCallback((nextToken, nextUser) => {
     try {
@@ -115,7 +105,7 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (token && !user) {
+      if (token) {
         try {
           const response = await API.get("/profile");
           const userData = response.data?.user;
@@ -136,7 +126,7 @@ const AuthProvider = ({ children }) => {
       }
     };
     fetchProfile();
-  }, [token, user, forceLocalLogout]);
+  }, [token, forceLocalLogout]);
 
   const value = useMemo(() => ({
     token,

@@ -12,7 +12,7 @@ import {
   Trash2
 } from "lucide-react";
 import API from "../../api/axios";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context/auth-context";
 
 const emptyMessage = { text: "", type: "" };
 
@@ -23,7 +23,7 @@ const formatDateTime = (value) => {
 
   try {
     return new Date(value).toLocaleString();
-  } catch (error) {
+  } catch {
     return "Unavailable";
   }
 };
@@ -162,6 +162,13 @@ const SecuritySettingsPanel = () => {
     }
   };
 
+  const scrollToTwoFactorSection = () => {
+    document.getElementById("two-factor-section")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  };
+
   const handleStartTwoFactorSetup = async () => {
     setTwoFactorMessage(emptyMessage);
     setIsWorkingTwoFactor(true);
@@ -195,7 +202,7 @@ const SecuritySettingsPanel = () => {
         text: "Authenticator key copied to your clipboard.",
         type: "success"
       });
-    } catch (error) {
+    } catch {
       setTwoFactorMessage({
         text: "Unable to copy the authenticator key.",
         type: "error"
@@ -428,11 +435,30 @@ const SecuritySettingsPanel = () => {
           </div>
           <div>
             <h3 className="text-sm font-bold text-surface-900">{securityState?.loginMethods?.password ? "Change Password" : "Set Password"}</h3>
-            <p className="text-xs text-surface-500">{securityState?.loginMethods?.password ? "Changing it signs out your other devices." : "Create email/password access for this account."}</p>
+            <p className="text-xs text-surface-500">
+              {securityState?.loginMethods?.password
+                ? "Changing it signs out your other devices and always needs your authenticator code."
+                : "Create email/password access for this account after enabling the authenticator app."}
+            </p>
           </div>
         </div>
         <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
           <MessageBanner message={passwordMessage} />
+          {!securityState?.twoFactor?.enabled && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+              <p className="text-sm font-semibold text-surface-900">Authenticator setup is required first.</p>
+              <p className="mt-1 text-xs text-surface-600">
+                Password changes now use your authenticator app instead of paid OTP delivery.
+              </p>
+              <button
+                type="button"
+                onClick={scrollToTwoFactorSection}
+                className="mt-3 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.2em] border border-amber-200 bg-white text-amber-700 hover:bg-amber-100"
+              >
+                Set Up Authenticator
+              </button>
+            </div>
+          )}
           {securityState?.loginMethods?.password && (
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-surface-700 uppercase tracking-wider">Current Password</label>
@@ -456,7 +482,11 @@ const SecuritySettingsPanel = () => {
             </div>
           )}
           <div className="flex justify-end">
-            <button type="submit" disabled={isUpdatingPassword} className="btn-primary flex items-center px-6 py-2.5">
+            <button
+              type="submit"
+              disabled={isUpdatingPassword || !securityState?.twoFactor?.enabled}
+              className="btn-primary flex items-center px-6 py-2.5"
+            >
               {isUpdatingPassword ? <Loader2 size={16} className="mr-2 animate-spin" /> : <KeyRound size={16} className="mr-2" />}
               {securityState?.loginMethods?.password ? "Update Password" : "Create Password"}
             </button>
@@ -464,7 +494,7 @@ const SecuritySettingsPanel = () => {
         </form>
       </div>
 
-      <div className={cardClass}>
+      <div className={cardClass} id="two-factor-section">
         <div className="p-6 border-b border-surface-100 flex items-center space-x-3 bg-surface-50/50">
           <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
             <ShieldCheck size={20} />

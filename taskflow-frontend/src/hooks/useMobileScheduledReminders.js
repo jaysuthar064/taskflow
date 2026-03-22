@@ -14,9 +14,9 @@ const isAndroidBrowser = () => {
 
 const supportsNotificationTriggers = () => {
     return (
-        typeof window !== "undefined" &&
+        typeof globalThis !== "undefined" &&
         typeof Notification !== "undefined" &&
-        typeof TimestampTrigger !== "undefined" &&
+        typeof globalThis.TimestampTrigger !== "undefined" &&
         "showTrigger" in Notification.prototype
     );
 };
@@ -103,7 +103,7 @@ export const useMobileScheduledReminders = ({ tasks = [], enabled = false }) => 
                         badge: "/notification-badge-96.png",
                         timestamp: reminder.reminderTime,
                         renotify: false,
-                        showTrigger: new TimestampTrigger(reminder.reminderTime),
+                        showTrigger: new globalThis.TimestampTrigger(reminder.reminderTime),
                         data: {
                             url: "/dashboard"
                         }

@@ -122,6 +122,10 @@ export const updatePassword = async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
 
+        if (!user.twoFactorEnabled) {
+            throw new Error("Enable your authenticator app before changing your password.");
+        }
+
         ensurePasswordStrength(newPassword);
         await verifyPasswordForUser(user, currentPassword);
         verifyTwoFactorCodeForUser(user, totpCode);

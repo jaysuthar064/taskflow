@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion } from "framer-motion";
+import Seo from "../components/common/Seo";
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -12,6 +13,21 @@ import {
 } from "lucide-react";
 
 const Landing = () => {
+  const landingSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "TaskFlow",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    url: "/",
+    description: "TaskFlow helps you organize tasks, reminders, notes, and daily work in one clean workspace.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD"
+    }
+  };
+
   const fadeInUp = {
     initial: { opacity: 0, y: 30 },
     whileInView: { opacity: 1, y: 0 },
@@ -27,14 +43,20 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-surface-50 overflow-x-hidden selection:bg-primary-100 selection:text-primary-900">
+      <Seo
+        title="TaskFlow | Task Management, Notes, and Reminders"
+        description="Organize tasks, notes, and reminders with interactive cards built for daily planning and focused team work."
+        path="/"
+        schema={landingSchema}
+      />
       {/* Decorative Background Elements - Hidden on mobile for performance */}
       <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
-        <motion.div 
+        <Motion.div 
           animate={{ x: [0, 50, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-200/20 blur-[120px] rounded-full"
         />
-        <motion.div 
+        <Motion.div 
           animate={{ x: [0, -40, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
           transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
           className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-200/10 blur-[150px] rounded-full"
@@ -42,14 +64,14 @@ const Landing = () => {
       </div>
 
       {/* Navigation */}
-      <motion.nav 
+      <Motion.nav 
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
         className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-surface-200"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <motion.div 
+          <Motion.div 
             whileHover={{ scale: 1.05 }}
             className="flex items-center space-x-2 group cursor-pointer"
           >
@@ -57,91 +79,91 @@ const Landing = () => {
               <span className="text-white font-bold text-xl">T</span>
             </div>
             <span className="font-bold text-lg sm:text-xl text-surface-900 tracking-tight whitespace-nowrap">TaskFlow</span>
-          </motion.div>
+          </Motion.div>
           
           <div className="hidden lg:flex items-center space-x-8">
             {["Features", "About"].map((item) => (
-              <motion.a 
+              <Motion.a 
                 key={item}
                 href={item === "About" ? "/about" : `#${item.toLowerCase()}`}
                 whileHover={{ y: -2 }}
                 className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors"
               >
                 {item}
-              </motion.a>
+              </Motion.a>
             ))}
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
             <Link to="/login" className="text-sm font-semibold text-surface-700 hover:text-primary-600 transition-colors hidden min-[360px]:block">Sign In</Link>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link to="/register" className="btn-primary py-2 px-4 sm:px-5 text-sm hover:shadow-2xl hover:shadow-primary-500/40 transition-all">Join Now</Link>
-            </motion.div>
+            </Motion.div>
           </div>
         </div>
-      </motion.nav>
+      </Motion.nav>
 
       {/* Hero Section */}
       <section className="relative pt-24 min-[360px]:pt-32 pb-16 min-[360px]:pb-20 px-4 sm:px-6 z-10">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 md:gap-16">
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             className="flex-1 text-center lg:text-left space-y-6 sm:space-y-8"
           >
-            <motion.div 
+            <Motion.div 
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, type: "spring" }}
               className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 text-primary-600 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
             >
               <Zap size={14} className="mr-2 animate-pulse" />
-              Build the future of your workflow
-            </motion.div>
+              Tasks, notes, and reminders in one place
+            </Motion.div>
             <h1 className="text-3xl min-[400px]:text-4xl min-[500px]:text-5xl lg:text-7xl font-extrabold text-surface-900 tracking-tighter leading-[1.1] sm:leading-[1.05]">
-              Manage Tasks with <br className="hidden min-[400px]:block" />
-              <motion.span 
+              Task Management for <br className="hidden min-[400px]:block" />
+              <Motion.span 
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 animate={{ clipPath: "inset(0 0% 0 0)" }}
                 transition={{ duration: 1, delay: 0.8 }}
                 className="bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent inline-block pb-2"
               >
-                Unmatched Precision
-              </motion.span>
+                Notes and Reminders
+              </Motion.span>
             </h1>
             <p className="text-sm sm:text-lg lg:text-xl text-surface-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium px-2 sm:px-0">
-              Join elite teams using the project tool that merges world-class design with high-performance engineering.
+              TaskFlow helps you capture notes, group work into cards, set reminders, and stay on top of personal or team tasks from one clean workspace.
             </p>
             <div className="flex flex-col min-[450px]:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full min-[450px]:w-auto">
+              <Motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full min-[450px]:w-auto">
                 <Link to="/register" className="btn-primary px-5 sm:px-10 py-3.5 sm:py-4.5 text-base sm:text-lg flex items-center group justify-center shadow-xl shadow-primary-500/25">
                   Get Started for Free
                   <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
-              </motion.div>
+              </Motion.div>
             </div>
             
             <div className="flex flex-col space-y-4 pt-10">
-                <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Designed for high-performance individuals</span>
+                <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Built for daily planning and team work</span>
                 <div className="flex items-center justify-center lg:justify-start space-x-4 opacity-50">
                     <CheckCircle2 size={16} className="text-primary-500" />
-                    <span className="text-xs font-bold text-surface-600">Zero Distraction</span>
+                    <span className="text-xs font-bold text-surface-600">Interactive Cards</span>
                     <div className="w-1.5 h-1.5 rounded-full bg-surface-300" />
                     <CheckCircle2 size={16} className="text-primary-500" />
-                    <span className="text-xs font-bold text-surface-600">Unlimited Tasks</span>
+                    <span className="text-xs font-bold text-surface-600">Smart Reminders</span>
                 </div>
             </div>
-          </motion.div>
+          </Motion.div>
           
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
             transition={{ duration: 1.2, delay: 0.4 }}
             className="flex-1 relative"
           >
             <div className="absolute -inset-4 bg-primary-500/10 blur-[100px] rounded-full" />
-            <motion.div 
+            <Motion.div 
                whileHover={{ y: -10, rotate: -1 }}
                className="relative card glass p-3 border-white/50 shadow-[0_22px_70px_4px_rgba(0,0,0,0.15)] overflow-hidden transition-all duration-700"
             >
@@ -155,7 +177,7 @@ const Landing = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                         {[500, 700].map((delay, i) => (
-                            <motion.div 
+                            <Motion.div 
                                 key={i}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
@@ -164,30 +186,30 @@ const Landing = () => {
                             >
                                 <div className={`w-full h-1 bg-${i === 0 ? "primary" : "indigo"}-500/40 rounded-full mb-3 mb-2`} />
                                 <div className={`w-2/3 h-1 bg-${i === 0 ? "primary" : "indigo"}-500/20 rounded-full`} />
-                            </motion.div>
+                            </Motion.div>
                         ))}
                     </div>
                   </div>
                </div>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         </div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="py-24 sm:py-32 bg-white relative">
         <div className="max-w-7xl mx-auto px-6">
-          <motion.div 
+          <Motion.div 
             {...fadeInUp}
             className="text-center max-w-3xl mx-auto mb-20 space-y-4"
           >
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-surface-900 tracking-tight">Standardized for Speed</h2>
+            <h2 className="text-4xl sm:text-5xl font-extrabold text-surface-900 tracking-tight">Plan Faster, Miss Less</h2>
             <p className="text-lg sm:text-xl text-surface-500 font-medium">
-              TaskFlow Pro delivers a seamless environment designed for high-velocity teams.
+              Create task cards, save notes, and manage reminders without switching between multiple tools.
             </p>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div 
+          <Motion.div 
             variants={staggerContainer}
             initial="initial"
             whileInView="whileInView"
@@ -197,24 +219,24 @@ const Landing = () => {
             {[
               { 
                 icon: <Layout className="text-primary-600" size={28} />, 
-                title: "Dynamic Kanban", 
-                desc: "Fluid drag-and-drop experience that adapts to your creative speed.",
+                title: "Interactive Task Cards", 
+                desc: "Open any card to add, edit, complete, or remove items from the same view.",
                 color: "bg-primary-50"
               },
               { 
                 icon: <Users className="text-indigo-600" size={28} />, 
-                title: "Cloud Engine", 
-                desc: "Instant real-time synchronization across teams and all devices.",
+                title: "Notes with Reminders", 
+                desc: "Save quick notes and schedule one-time or repeating reminders for important work.",
                 color: "bg-indigo-50"
               },
               { 
                 icon: <Shield className="text-emerald-600" size={28} />, 
-                title: "Vaulted Security", 
-                desc: "Military-grade encryption for every task and every workspace node.",
+                title: "Secure Sign-In", 
+                desc: "Protect your workspace with fixed email identity, authenticator-based security, and account controls.",
                 color: "bg-emerald-50"
               }
             ].map((feature, i) => (
-              <motion.div 
+              <Motion.div 
                 key={i}
                 variants={fadeInUp}
                 whileHover={{ y: -12 }}
@@ -225,24 +247,24 @@ const Landing = () => {
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-surface-900 mb-3 sm:mb-4 group-hover:text-primary-600 transition-colors">{feature.title}</h3>
                 <p className="text-sm sm:text-base text-surface-500 leading-relaxed font-medium">{feature.desc}</p>
-              </motion.div>
+              </Motion.div>
             ))}
-          </motion.div>
+          </Motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <motion.section 
+      <Motion.section 
         {...fadeInUp}
         className="py-20 min-[360px]:py-28 px-4 sm:px-6 relative"
       >
         <div className="max-w-6xl mx-auto bg-surface-900 rounded-3xl sm:rounded-[3rem] p-8 sm:p-16 md:p-24 text-center relative overflow-hidden shadow-3xl">
-          <motion.div 
+          <Motion.div 
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
             transition={{ duration: 10, repeat: Infinity }}
             className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary-600/30 blur-[100px] -translate-y-1/2 translate-x-1/2 hidden lg:block"
           />
-          <motion.div 
+          <Motion.div 
             animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.15, 0.1] }}
             transition={{ duration: 12, repeat: Infinity }}
             className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 blur-[120px] translate-y-1/2 -translate-x-1/2 hidden lg:block"
@@ -263,10 +285,10 @@ const Landing = () => {
             </div>
           </div>
         </div>
-      </motion.section>
+      </Motion.section>
 
       {/* Footer */}
-      <motion.footer 
+      <Motion.footer 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -282,7 +304,7 @@ const Landing = () => {
             </div>
             <div className="space-y-2 text-center md:text-left">
                 <p className="text-sm text-surface-500 max-w-[200px]">
-                A powerful, design-first project management tool.
+                Task management with notes, cards, and reminders in one workspace.
                 </p>
                 <a href="mailto:jayantisuthar094@gmail.com" className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors block">
                     jayantisuthar094@gmail.com
@@ -312,7 +334,7 @@ const Landing = () => {
             </a>
           </div>
         </div>
-      </motion.footer>
+      </Motion.footer>
     </div>
   );
 };

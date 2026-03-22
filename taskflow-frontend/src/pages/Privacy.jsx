@@ -1,10 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, Lock, Eye, Server, UserCheck } from "lucide-react";
+import Seo from "../components/common/Seo";
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-surface-50 p-6 md:p-12">
+      <Seo
+        title="Privacy Policy | TaskFlow"
+        description="Read how TaskFlow handles account data, tasks, reminders, and security across the platform."
+        path="/privacy"
+      />
       <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group">
           <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" />

@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import React, { useEffect, useState } from "react";
 import { 
   TrendingUp, 
   CheckCircle, 
@@ -15,25 +14,40 @@ import {
 } from "lucide-react";
 import API from "../../api/axios";
 
+const MetricCard = ({ title, value, icon, subtitle, trend, colorClass }) => (
+  <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/20 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
+    <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 ${colorClass} opacity-5 rounded-full group-hover:scale-125 transition-transform duration-700`} />
+    <div className="flex justify-between items-start relative z-10">
+      <div className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-opacity-100 flex items-center justify-center shadow-inner`}>
+          {React.cloneElement(icon, { size: 20 })}
+      </div>
+      {trend && (
+          <span className="flex items-center text-[10px] font-black text-green-600 bg-green-50/50 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-100/50">
+              <ArrowUpRight size={10} className="mr-0.5" />
+              {trend}
+          </span>
+      )}
+    </div>
+    <div className="mt-5 relative z-10">
+      <h3 className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em]">{title}</h3>
+      <p className="text-3xl font-black text-surface-900 mt-1.5 tracking-tighter">{value}</p>
+      <p className="text-[10px] text-surface-500 mt-1.5 font-bold uppercase tracking-wider opacity-70">{subtitle}</p>
+    </div>
+  </div>
+);
+
 const ProductivityView = ({ setActiveView }) => {
-  const { user } = useContext(AuthContext);
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTooltip, setActiveTooltip] = useState(null);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [activities, setActivities] = useState([]);
-
-  const initials = user?.name
-    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
-    : "U";
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const [statsRes, tasksRes] = await Promise.all([
-          API.get("productivity-stats"),
-          API.get("tasks")
+          API.get("/productivity-stats"),
+          API.get("/tasks")
         ]);
         
         setStats(statsRes.data.data || []);
@@ -91,28 +105,6 @@ const ProductivityView = ({ setActiveView }) => {
   const consistencyPoints = nonZeroDays * 5; // Max 35 points
   const efficiencyPoints = totalCreated > 0 ? (totalCompleted / totalCreated) * 15 : 0; // Max 15 points
   const productivityScore = Math.min(100, Math.round(volumePoints + consistencyPoints + efficiencyPoints));
-
-  const MetricCard = ({ title, value, icon, subtitle, trend, colorClass }) => (
-    <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/20 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
-      <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 ${colorClass} opacity-5 rounded-full group-hover:scale-125 transition-transform duration-700`} />
-      <div className="flex justify-between items-start relative z-10">
-        <div className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-opacity-100 flex items-center justify-center shadow-inner`}>
-            {React.cloneElement(icon, { size: 20 })}
-        </div>
-        {trend && (
-            <span className="flex items-center text-[10px] font-black text-green-600 bg-green-50/50 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-100/50">
-                <ArrowUpRight size={10} className="mr-0.5" />
-                {trend}
-            </span>
-        )}
-      </div>
-      <div className="mt-5 relative z-10">
-        <h3 className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em]">{title}</h3>
-        <p className="text-3xl font-black text-surface-900 mt-1.5 tracking-tighter">{value}</p>
-        <p className="text-[10px] text-surface-500 mt-1.5 font-bold uppercase tracking-wider opacity-70">{subtitle}</p>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">

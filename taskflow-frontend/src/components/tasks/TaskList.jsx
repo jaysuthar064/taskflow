@@ -1,50 +1,78 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { CheckSquare, Layers3, ListTodo } from "lucide-react";
 import TaskCard from "./TaskCard";
-import { ListTodo, CheckSquare, Clock } from "lucide-react";
+import { groupTasksByCollection } from "./taskCollections";
 
-const TaskList = ({ tasks = [], onDelete, onToggle }) => {
-  const safeTasks = Array.isArray(tasks) ? tasks : [];
-  
-  const pendingTasks = safeTasks.filter(t => !t.completed);
-  const completedTasks = safeTasks.filter(t => t.completed);
+const TaskList = ({
+  tasks = [],
+  onOpenCollection,
+  onToggleTask,
+  onDeleteCollection,
+  onQuickAddItem
+}) => {
+  const safeTasks = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks]);
+  const taskGroups = useMemo(() => groupTasksByCollection(safeTasks), [safeTasks]);
 
-  const Column = ({ title, icon, tasks, countColor }) => (
-    <div className="flex flex-col w-full lg:w-80 bg-surface-100/50 rounded-lg border border-surface-200 p-3 h-fit min-h-[500px]">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center space-x-2">
-          <h2 className="text-xs font-bold text-surface-600 uppercase tracking-wider">{title}</h2>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-surface-200 text-surface-600 font-bold">
-            {tasks.length}
-          </span>
-        </div>
+  const summaryCards = [
+    {
+      label: "Cards",
+      value: taskGroups.length,
+      icon: <Layers3 size={16} />,
+      tone: "bg-sky-50 border-sky-100 text-sky-700"
+    },
+    {
+      label: "Open Tasks",
+      value: safeTasks.filter((task) => !task.completed).length,
+      icon: <ListTodo size={16} />,
+      tone: "bg-amber-50 border-amber-100 text-amber-700"
+    },
+    {
+      label: "Completed",
+      value: safeTasks.filter((task) => task.completed).length,
+      icon: <CheckSquare size={16} />,
+      tone: "bg-emerald-50 border-emerald-100 text-emerald-700"
+    }
+  ];
+
+  if (safeTasks.length === 0) {
+    return (
+      <div className="rounded-[1.75rem] border border-dashed border-surface-300 bg-white px-5 py-12 text-center">
+        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-surface-400">No cards yet</p>
+        <h3 className="mt-3 text-lg font-bold text-surface-900">Create your first task card.</h3>
+        <p className="mt-2 text-sm text-surface-500 max-w-md mx-auto">
+          Add a card to start organizing your tasks in one place.
+        </p>
       </div>
-      
-      <div className="space-y-3">
-        {tasks.length === 0 ? (
-          <div className="border border-dashed border-surface-300 rounded p-6 text-center">
-            <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">Empty</p>
-          </div>
-        ) : (
-          tasks.map((task) => (
-            <TaskCard key={task._id} task={task} onDelete={onDelete} onToggle={onToggle} />
-          ))
-        )}
-      </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 items-start pb-8">
-      <Column 
-        title="To Do" 
-        icon={<ListTodo size={16} />} 
-        tasks={pendingTasks} 
-      />
-      <Column 
-        title="Completed" 
-        icon={<CheckSquare size={16} />} 
-        tasks={completedTasks} 
-      />
+    <div className="space-y-4 sm:space-y-6 pb-8">
+      <div className="grid gap-3 min-[360px]:grid-cols-3">
+        {summaryCards.map(({ label, value, icon, tone }) => (
+          <div key={label} className={`rounded-2xl border px-4 py-4 ${tone}`}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em]">{label}</p>
+              {icon}
+            </div>
+            <p className="mt-3 text-2xl font-bold text-surface-900">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="columns-1 min-[700px]:columns-2 2xl:columns-3 gap-4 sm:gap-5">
+        {taskGroups.map((taskGroup) => (
+          <div key={taskGroup.id} className="mb-4 break-inside-avoid sm:mb-5">
+            <TaskCard
+              taskGroup={taskGroup}
+              onOpenCollection={onOpenCollection}
+              onToggleTask={onToggleTask}
+              onDeleteCollection={onDeleteCollection}
+              onQuickAddItem={onQuickAddItem}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

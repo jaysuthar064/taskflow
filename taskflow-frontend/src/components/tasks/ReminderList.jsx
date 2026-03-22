@@ -1,24 +1,16 @@
 import React from "react";
 import { Bell, CalendarClock, CheckCircle2, Circle, Trash2 } from "lucide-react";
-
-const formatReminderTime = (value) =>
-  new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+import { formatReminderRepeat, formatReminderTime } from "./taskReminderUtils";
 
 const ReminderList = ({ tasks = [], onDelete, onToggle }) => {
   const safeTasks = Array.isArray(tasks) ? tasks : [];
-  const now = Date.now();
 
   if (safeTasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-14 text-center">
         <Bell className="text-surface-300 mb-3" size={40} />
-        <p className="text-surface-500 font-medium">No active reminders found</p>
-        <p className="text-sm text-surface-400 mt-1">Create a task with a reminder time to see it here.</p>
+        <p className="text-surface-500 font-medium">No reminders yet</p>
+        <p className="text-sm text-surface-400 mt-1">Add a reminder to see it here.</p>
       </div>
     );
   }
@@ -27,7 +19,8 @@ const ReminderList = ({ tasks = [], onDelete, onToggle }) => {
     <div className="space-y-3 p-3 sm:p-4">
       {safeTasks.map((task) => {
         const reminderTime = new Date(task.reminder).getTime();
-        const isOverdue = reminderTime <= now;
+        const isOverdue = reminderTime <= new Date().getTime();
+        const repeatLabel = formatReminderRepeat(task.reminderRepeat, task.reminderWeekdays);
 
         return (
           <div
@@ -57,6 +50,9 @@ const ReminderList = ({ tasks = [], onDelete, onToggle }) => {
                   <CalendarClock size={14} className={isOverdue ? "text-red-500" : "text-primary-500"} />
                   <span>{formatReminderTime(task.reminder)}</span>
                 </div>
+                {repeatLabel && (
+                  <p className="mt-2 text-xs font-semibold text-surface-500">{repeatLabel}</p>
+                )}
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">

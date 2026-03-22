@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/auth-context";
 import { 
   LayoutDashboard, 
   CheckCircle2, 
@@ -8,11 +8,10 @@ import {
   PlusCircle,
   BarChart3,
   LogOut,
-  User,
   Bell
 } from "lucide-react";
 
-const Sidebar = ({ isOpen, toggleSidebar, isHidden, hideSidebar, onNewTask, activeView, setActiveView }) => {
+const Sidebar = ({ isOpen, toggleSidebar, isHidden, onNewTask, activeView, setActiveView }) => {
   const { user, logout } = useContext(AuthContext);
   
   const initials = user?.name

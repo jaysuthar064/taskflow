@@ -184,21 +184,20 @@ export const updateProfile = async (req, res) => {
         const normalizedEmail = String(email || "").trim().toLowerCase();
 
         if (normalizedEmail && normalizedEmail !== user.email) {
-            const existingUser = await User.findOne({
-                email: normalizedEmail,
-                _id: { $ne: user._id }
+            return res.status(400).json({
+                message: "Email address is fixed for this account and cannot be changed."
             });
-
-            if (existingUser) {
-                return res.status(400).json({
-                    message: "That email address is already in use."
-                });
-            }
-
-            user.email = normalizedEmail;
         }
 
-        if (name) user.name = String(name).trim();
+        const trimmedName = String(name || "").trim();
+
+        if (!trimmedName) {
+            return res.status(400).json({
+                message: "Name is required."
+            });
+        }
+
+        user.name = trimmedName;
 
         await user.save();
 
@@ -207,10 +206,6 @@ export const updateProfile = async (req, res) => {
             user: serializeUser(user)
         });
     } catch (error) {
-        if (error.code === 11000) {
-            return res.status(400).json(buildDuplicateEmailMessage());
-        }
-
         res.status(500).json({ message: "Error updating profile" });
     }
 }

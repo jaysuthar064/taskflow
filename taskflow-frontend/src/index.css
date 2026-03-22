@@ -9,6 +9,7 @@
     @apply font-sans bg-surface-50 text-surface-900;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 }
 
