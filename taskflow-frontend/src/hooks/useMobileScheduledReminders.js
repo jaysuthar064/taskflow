@@ -47,7 +47,7 @@ export const useMobileScheduledReminders = ({ tasks = [], enabled = false }) => 
                 const nextReminders = new Map();
 
                 tasks.forEach((task) => {
-                    if (!task?.reminder || task.completed) {
+                    if (!task?.reminder || task.completed || task.archived || task.trashedAt) {
                         return;
                     }
 
@@ -58,8 +58,8 @@ export const useMobileScheduledReminders = ({ tasks = [], enabled = false }) => 
                     }
 
                     nextReminders.set(buildReminderTag(task._id), {
-                        title: `TaskFlow Reminder: ${task.title}`,
-                        body: task.description || "Your task reminder is due now.",
+                        title: `TaskFlow Reminder: ${task.title || "Untitled task"}`,
+                        body: task.description || task.checklistItems?.[0]?.text || "A task reminder is due now.",
                         reminderTime
                     });
                 });

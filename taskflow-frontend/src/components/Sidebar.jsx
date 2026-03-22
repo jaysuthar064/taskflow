@@ -1,127 +1,186 @@
 import React, { useContext } from "react";
-import { AuthContext } from "../context/auth-context";
-import { 
-  LayoutDashboard, 
-  CheckCircle2, 
-  Settings, 
-  ChevronLeft, 
-  PlusCircle,
-  BarChart3,
-  LogOut,
-  Bell
+import {
+  Archive,
+  Bell,
+  ChevronLeft,
+  PencilLine,
+  Plus,
+  StickyNote,
+  Tag,
+  Tags,
+  Trash2
 } from "lucide-react";
+import { AuthContext } from "../context/auth-context";
 
-const Sidebar = ({ isOpen, toggleSidebar, isHidden, onNewTask, activeView, setActiveView }) => {
-  const { user, logout } = useContext(AuthContext);
-  
-  const initials = user?.name
-    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
-    : "U";
+const Sidebar = ({
+  isMobileOpen,
+  isCollapsed,
+  onCloseMobile,
+  activeSection,
+  onChangeSection,
+  labels = [],
+  selectedLabel,
+  onSelectLabel,
+  onOpenLabelManager,
+  onCreateNote
+}) => {
+  const { user } = useContext(AuthContext);
 
-  const menuItems = [
-    { id: "dashboard", icon: <LayoutDashboard size={22} />, label: "Dashboard" },
-    { id: "mytasks", icon: <CheckCircle2 size={22} />, label: "My Tasks" },
-    { id: "productivity", icon: <BarChart3 size={22} />, label: "Productivity" },
-    { id: "reminders", icon: <Bell size={22} />, label: "Reminders" },
-    { id: "settings", icon: <Settings size={22} />, label: "Settings" },
+  const navItems = [
+    { id: "notes", label: "Tasks", icon: StickyNote },
+    { id: "reminders", label: "Reminders", icon: Bell },
+    { id: "archive", label: "Archive", icon: Archive },
+    { id: "trash", label: "Trash", icon: Trash2 }
   ];
 
-  if (isHidden) return null;
+  const sidebarWidthClass = isCollapsed ? "min-[900px]:w-20" : "min-[900px]:w-72";
 
   return (
     <>
-      {/* Sidebar Backdrop for Mobile */}
-      <div 
-        className={`fixed inset-0 bg-surface-900/60 backdrop-blur-sm z-[60] transition-opacity duration-300 lg:hidden ${
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      <div
+        className={`fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm transition-opacity min-[900px]:hidden ${
+          isMobileOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
-        onClick={toggleSidebar}
+        onClick={onCloseMobile}
       />
 
-      {/* Sidebar Content */}
-      <aside 
-        className={`fixed top-0 left-0 h-full bg-surface-900 z-[70] transition-all duration-300 border-r border-surface-800 shadow-xl ${
-          isOpen ? "translate-x-0 w-64" : "-translate-x-full lg:translate-x-0 lg:w-64"
+      <aside
+        className={`fixed inset-y-0 left-0 z-[80] w-[min(18rem,calc(100vw-0.75rem))] overflow-x-hidden border-r border-white/10 bg-[#202124] shadow-[0_16px_40px_rgba(0,0,0,0.32)] transition-transform duration-250 min-[900px]:sticky min-[900px]:top-0 min-[900px]:inset-auto min-[900px]:left-auto min-[900px]:z-[50] min-[900px]:h-screen min-[900px]:w-auto min-[900px]:flex-shrink-0 min-[900px]:translate-x-0 min-[900px]:shadow-none ${sidebarWidthClass} ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-surface-800">
-            <button 
-              onClick={() => setActiveView("dashboard")}
-              className="flex items-center space-x-2 sm:space-x-3 group"
-            >
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary-600 rounded flex items-center justify-center group-hover:scale-110 transition-transform">
-                <span className="text-white font-bold text-lg sm:text-xl">T</span>
+        <div className="flex h-full flex-col">
+          <div className={`flex min-h-[76px] items-center justify-between border-b border-white/10 px-3.5 min-[360px]:px-4 sm:px-5 ${isCollapsed ? "min-[900px]:px-3" : ""}`}>
+            <div className={`flex items-center gap-3 ${isCollapsed ? "min-[900px]:w-full min-[900px]:justify-center" : ""}`}>
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#8ab4f8] text-lg font-bold text-[#202124]">
+                T
               </div>
-              <span className="font-bold text-base sm:text-lg text-white tracking-tight group-hover:text-primary-400 transition-colors">
-                TaskFlow
-              </span>
-            </button>
-            
-            <button 
-              onClick={toggleSidebar}
-              className="lg:hidden p-1.5 text-surface-400 hover:text-white hover:bg-surface-800 rounded transition-colors"
+              {!isCollapsed && (
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-[#e8eaed] min-[360px]:text-base">TaskFlow</p>
+                  <p className="hidden truncate text-xs text-[#9aa0a6] min-[420px]:block">Plan, track, organize</p>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#303134] hover:text-[#e8eaed] min-[900px]:hidden"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
           </div>
-          
-          <div className="p-4 flex flex-col flex-1">
-            {/* Action Button */}
-            <button 
-              onClick={onNewTask}
-              className="btn-primary mb-6 w-full hidden lg:flex items-center justify-center py-2.5"
+
+          <div className="flex-1 overflow-y-auto px-2 py-4 min-[360px]:py-5 sm:px-3">
+            <button
+              type="button"
+              onClick={onCreateNote}
+              className={`mb-5 inline-flex items-center justify-start rounded-full bg-[#feefc3] px-4 py-3 text-sm font-medium text-[#202124] shadow-sm transition-transform hover:scale-[1.01] min-[360px]:px-5 min-[360px]:py-3.5 ${
+                isCollapsed ? "min-[900px]:w-full min-[900px]:justify-center min-[900px]:px-0" : "w-full"
+              }`}
             >
-              <PlusCircle size={18} className="mr-2" />
-              <span className="font-semibold text-sm">New Task</span>
+              <Plus size={18} className={isCollapsed ? "" : "mr-3"} />
+              {!isCollapsed && <span>New task</span>}
             </button>
-  
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1">
-              {menuItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveView(item.id);
-                    if (window.innerWidth < 1024) toggleSidebar();
-                  }}
-                  className={`w-full flex items-center rounded-md px-3 py-2 transition-colors duration-150 ${
-                    activeView === item.id 
-                      ? "bg-primary-600/10 text-primary-400 font-semibold" 
-                      : "text-surface-400 hover:bg-surface-800 hover:text-surface-100"
-                  }`}
-                >
-                  <div className={`mr-3 ${activeView === item.id ? "text-primary-500" : "text-surface-500"}`}>
-                    {React.cloneElement(item.icon, { size: 18 })}
-                  </div>
-                  <span className="text-sm">
-                    {item.label}
-                  </span>
-                </button>
-              ))}
+
+            <nav className="space-y-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeSection === item.id && !selectedLabel;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectLabel("");
+                      onChangeSection(item.id);
+                      onCloseMobile();
+                    }}
+                    className={`flex w-full items-center rounded-full px-4 py-3 text-sm font-medium transition-colors min-[360px]:px-5 ${
+                      isActive
+                        ? "bg-[#41331c] text-[#feefc3]"
+                        : "text-[#e8eaed] hover:bg-[#303134]"
+                    } ${isCollapsed ? "min-[900px]:justify-center min-[900px]:rounded-2xl min-[900px]:px-0" : ""}`}
+                  >
+                    <Icon size={18} className={isCollapsed ? "" : "mr-3"} />
+                    {!isCollapsed && item.label}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={onOpenLabelManager}
+                className={`flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-[#e8eaed] transition-colors hover:bg-[#303134] min-[360px]:px-5 ${
+                  isCollapsed ? "min-[900px]:justify-center min-[900px]:rounded-2xl min-[900px]:px-0" : ""
+                }`}
+              >
+                <PencilLine size={18} className={isCollapsed ? "" : "mr-3"} />
+                {!isCollapsed && "Edit labels"}
+              </button>
             </nav>
 
-            {/* Sidebar Profile/Footer */}
-            <div className="mt-auto pt-4 border-t border-surface-800">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-surface-800/50 border border-surface-700/50">
-                    <div className="flex items-center space-x-3 overflow-hidden">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold ring-2 ring-surface-700">
-                            {initials}
-                        </div>
-                        <div className="overflow-hidden">
-                            <p className="text-xs font-bold text-white truncate">{user?.name || "User"}</p>
-                            <p className="text-[10px] text-surface-500 truncate capitalize">{user?.role || "Member"}</p>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={logout}
-                        className="p-1.5 text-surface-500 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                        title="Logout"
+            <div className="mt-6 border-t border-white/10 pt-5">
+              {!isCollapsed && (
+                <p className="mb-3 px-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aa0a6] min-[360px]:px-5">
+                  Labels
+                </p>
+              )}
+
+              <div className="space-y-1.5">
+                {labels.map((label) => {
+                  const isActive = selectedLabel.toLowerCase() === label.toLowerCase();
+
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        onChangeSection("notes");
+                        onSelectLabel(label);
+                        onCloseMobile();
+                      }}
+                      className={`flex w-full items-center rounded-full px-4 py-3 text-sm font-medium transition-colors min-[360px]:px-5 ${
+                        isActive
+                          ? "bg-[#1f3b5b] text-[#8ab4f8]"
+                          : "text-[#e8eaed] hover:bg-[#303134]"
+                      } ${isCollapsed ? "min-[900px]:justify-center min-[900px]:rounded-2xl min-[900px]:px-0" : ""}`}
+                      title={label}
                     >
-                        <LogOut size={16} />
+                      {isCollapsed ? (
+                        <Tag size={18} />
+                      ) : (
+                        <>
+                          <Tags size={18} className="mr-3" />
+                          <span className="truncate">#{label}</span>
+                        </>
+                      )}
                     </button>
+                  );
+                })}
+
+                {labels.length === 0 && !isCollapsed && (
+                  <div className="mx-2 rounded-2xl border border-dashed border-[#5f6368] px-4 py-4 text-xs text-[#9aa0a6]">
+                    Create labels to group related tasks.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 px-2 py-4 min-[360px]:px-3">
+            <div className={`flex items-center rounded-2xl border border-white/10 bg-[#303134] px-3 py-3 ${isCollapsed ? "min-[900px]:justify-center min-[900px]:px-0" : ""}`}>
+              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#8ab4f8] text-sm font-semibold text-[#202124]">
+                {user?.name?.slice(0, 1)?.toUpperCase() || "U"}
+              </div>
+              {!isCollapsed && (
+                <div className="ml-3 min-w-0">
+                  <p className="truncate text-sm font-medium text-[#e8eaed]">{user?.name || "User"}</p>
+                  <p className="truncate text-xs text-[#9aa0a6]">{user?.email || "name@example.com"}</p>
                 </div>
+              )}
             </div>
           </div>
         </div>

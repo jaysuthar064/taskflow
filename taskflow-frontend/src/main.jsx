@@ -4,12 +4,35 @@ import App from "./App.jsx";
 import "./index.css";
 import AuthProvider from "./context/AuthContext.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
-import { registerPushServiceWorker } from "./utils/pushNotifications.js";
+import {
+  clearTaskflowServiceWorkerState,
+  registerPushServiceWorker
+} from "./utils/pushNotifications.js";
 
 if (typeof window !== "undefined") {
+  let hasRefreshedForServiceWorker = false;
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (hasRefreshedForServiceWorker) {
+        return;
+      }
+
+      hasRefreshedForServiceWorker = true;
+      window.location.reload();
+    });
+  }
+
   window.addEventListener("load", () => {
-    registerPushServiceWorker().catch((error) => {
-      console.error("Unable to register push service worker", error);
+    if (import.meta.env.PROD) {
+      registerPushServiceWorker().catch((error) => {
+        console.error("Unable to register push service worker", error);
+      });
+      return;
+    }
+
+    clearTaskflowServiceWorkerState().catch((error) => {
+      console.error("Unable to clear push service worker state", error);
     });
   });
 }

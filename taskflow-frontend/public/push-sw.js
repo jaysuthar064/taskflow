@@ -1,19 +1,22 @@
+const CACHE_VERSION = "v2";
+const STATIC_CACHE = `taskflow-static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `taskflow-runtime-${CACHE_VERSION}`;
+const CACHEABLE_SHELL_ASSETS = [
+    "/offline.html",
+    "/app.webmanifest",
+    "/favicon.svg",
+    "/apple-touch-icon.png",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/icon-maskable-512.png",
+    "/notification-icon-192.png",
+    "/notification-badge-96.png"
+];
+
 self.addEventListener("install", (event) => {
     event.waitUntil(
-        caches.open("taskflow-static-v1").then((cache) => {
-            return cache.addAll([
-                "/",
-                "/index.html",
-                "/offline.html",
-                "/app.webmanifest",
-                "/favicon.svg",
-                "/apple-touch-icon.png",
-                "/icon-192.png",
-                "/icon-512.png",
-                "/icon-maskable-512.png",
-                "/notification-icon-192.png",
-                "/notification-badge-96.png"
-            ]);
+        caches.open(STATIC_CACHE).then((cache) => {
+            return cache.addAll(CACHEABLE_SHELL_ASSETS);
         }).then(() => self.skipWaiting())
     );
 });
@@ -24,7 +27,11 @@ self.addEventListener("activate", (event) => {
             const cacheKeys = await caches.keys();
             await Promise.all(
                 cacheKeys.map((cacheKey) => {
-                    if (!["taskflow-static-v1", "taskflow-runtime-v1"].includes(cacheKey)) {
+                    if (
+                        (cacheKey.startsWith("taskflow-static-") ||
+                            cacheKey.startsWith("taskflow-runtime-")) &&
+                        ![STATIC_CACHE, RUNTIME_CACHE].includes(cacheKey)
+                    ) {
                         return caches.delete(cacheKey);
                     }
 
@@ -37,14 +44,36 @@ self.addEventListener("activate", (event) => {
             }
 
             await self.clients.claim();
+
+            const clients = await self.clients.matchAll({
+                type: "window",
+                includeUncontrolled: true
+            });
+
+            await Promise.all(
+                clients.map((client) =>
+                    "navigate" in client
+                        ? client.navigate(client.url).catch(() => undefined)
+                        : Promise.resolve()
+                )
+            );
         })()
     );
 });
 
 const cacheRuntimeAsset = async (request, response) => {
-    const cache = await caches.open("taskflow-runtime-v1");
+    const cache = await caches.open(RUNTIME_CACHE);
     await cache.put(request, response.clone());
     return response;
+};
+
+const fetchNetworkFirst = async (request, fallbackResponse = null) => {
+    try {
+        const networkResponse = await fetch(request);
+        return cacheRuntimeAsset(request, networkResponse);
+    } catch {
+        return fallbackResponse || caches.match(request);
+    }
 };
 
 self.addEventListener("fetch", (event) => {
@@ -63,22 +92,17 @@ self.addEventListener("fetch", (event) => {
     if (request.mode === "navigate") {
         event.respondWith(
             (async () => {
-                try {
-                    const preloadResponse = await event.preloadResponse;
+                const preloadResponse = await event.preloadResponse;
 
-                    if (preloadResponse) {
-                        return cacheRuntimeAsset(request, preloadResponse);
-                    }
-
-                    const networkResponse = await fetch(request);
-                    return cacheRuntimeAsset(request, networkResponse);
-                } catch {
-                    return (
-                        await caches.match(request) ||
-                        await caches.match("/") ||
-                        await caches.match("/offline.html")
-                    );
+                if (preloadResponse) {
+                    return cacheRuntimeAsset(request, preloadResponse);
                 }
+
+                return (
+                    await fetchNetworkFirst(request) ||
+                    await caches.match(request) ||
+                    await caches.match("/offline.html")
+                );
             })()
         );
 
@@ -91,6 +115,10 @@ self.addEventListener("fetch", (event) => {
 
     event.respondWith(
         (async () => {
+            if (["script", "style", "manifest"].includes(request.destination)) {
+                return fetchNetworkFirst(request);
+            }
+
             const cachedResponse = await caches.match(request);
             const fetchPromise = fetch(request)
                 .then((networkResponse) => cacheRuntimeAsset(request, networkResponse))

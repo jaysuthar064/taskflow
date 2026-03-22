@@ -1,99 +1,35 @@
-import React, { useContext } from "react";
-import { AuthContext } from "../context/auth-context";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bell,
-  Clock,
-  Loader2,
-  LogOut,
-  Mail,
-  PanelLeftOpen,
+  LayoutGrid,
+  List,
+  Menu,
   Search,
   Settings,
-  ShieldCheck
+  X
 } from "lucide-react";
-import API from "../api/axios";
+import { AuthContext } from "../context/auth-context";
+import { NOTE_COLORS, SEARCH_FILTER_DEFINITIONS } from "./notes/noteUtils";
 
-const formatJoinedDate = (value) => {
-  if (!value) {
-    return "Recently";
-  }
-
-  try {
-    return new Date(value).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
-  } catch {
-    return "Recently";
-  }
-};
-
-const Navbar = ({ onToggleSidebar, searchQuery, setSearchQuery, setActiveView }) => {
+const Navbar = ({
+  onToggleSidebar,
+  searchQuery,
+  setSearchQuery,
+  searchFilters,
+  setSearchFilters,
+  viewMode,
+  setViewMode,
+  onOpenSettings,
+  searchInputRef
+}) => {
   const { user, logout } = useContext(AuthContext);
-  const [showNotifications, setShowNotifications] = React.useState(false);
-  const [showProfilePanel, setShowProfilePanel] = React.useState(false);
-  const [notifications, setNotifications] = React.useState([]);
-  const [loadingNotifications, setLoadingNotifications] = React.useState(false);
-  const notificationsRef = React.useRef(null);
-  const profileRef = React.useRef(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const profileRef = useRef(null);
 
-  const initials = user?.name
-    ? user.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2).toUpperCase()
-    : "U";
-
-  const loginMethodsLabel = [
-    user?.loginMethods?.password ? "Password" : null,
-    user?.loginMethods?.google ? "Google" : null
-  ]
-    .filter(Boolean)
-    .join(" + ") || "Password";
-
-  const fetchNotifications = async () => {
-    setLoadingNotifications(true);
-    try {
-      const response = await API.get("/notifications");
-      setNotifications(response.data.data || []);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setLoadingNotifications(false);
-    }
-  };
-
-  const handleClearNotifications = async () => {
-    try {
-      setLoadingNotifications(true);
-      await API.delete("/notifications");
-      setNotifications([]);
-    } catch (error) {
-      console.error("Error clearing notifications:", error);
-    } finally {
-      setLoadingNotifications(false);
-    }
-  };
-
-  const openProfileSettings = () => {
-    setActiveView("settings");
-    setShowProfilePanel(false);
-    setShowNotifications(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  React.useEffect(() => {
-    if (showNotifications) {
-      fetchNotifications();
-    }
-  }, [showNotifications]);
-
-  React.useEffect(() => {
+  useEffect(() => {
     const handlePointerDown = (event) => {
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-
       if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfilePanel(false);
+        setShowProfileMenu(false);
       }
     };
 
@@ -106,203 +42,213 @@ const Navbar = ({ onToggleSidebar, searchQuery, setSearchQuery, setActiveView })
     };
   }, []);
 
-  return (
-    <header className="sticky top-0 z-40 w-full bg-white/85 backdrop-blur-md border-b border-surface-200 px-2.5 sm:px-4 lg:px-6 py-2">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <button
-            onClick={onToggleSidebar}
-            className="p-1.5 sm:p-2 text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all lg:hidden shrink-0"
-            title="Menu"
-          >
-            <PanelLeftOpen size={18} />
-          </button>
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(searchQuery.trim()) ||
+      Object.entries(searchFilters).some(([key, value]) =>
+        key === "colors" ? value.length > 0 : Boolean(value)
+      ),
+    [searchFilters, searchQuery]
+  );
 
-          <div className="flex items-center space-x-2 lg:hidden hidden min-[400px]:flex shrink-0">
-            <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary-500/20">
-              <span className="text-white font-black text-lg tracking-tighter">T</span>
-            </div>
-            <span className="font-bold text-sm text-surface-900 tracking-tight whitespace-nowrap hidden min-[500px]:block">
-              TaskFlow
-            </span>
+  const toggleSearchFilter = (filterKey) => {
+    setSearchFilters((currentFilters) => ({
+      ...currentFilters,
+      [filterKey]: !currentFilters[filterKey]
+    }));
+  };
+
+  const toggleColorFilter = (colorValue) => {
+    setSearchFilters((currentFilters) => ({
+      ...currentFilters,
+      colors: currentFilters.colors.includes(colorValue)
+        ? currentFilters.colors.filter((currentColor) => currentColor !== colorValue)
+        : [...currentFilters.colors, colorValue]
+    }));
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchFilters({
+      reminders: false,
+      lists: false,
+      images: false,
+      urls: false,
+      drawings: false,
+      colors: []
+    });
+    searchInputRef?.current?.focus();
+  };
+
+  const searchBar = (
+    <div className="relative order-last basis-full min-w-0 min-[600px]:order-none min-[600px]:basis-auto min-[600px]:flex-1 min-[600px]:max-w-4xl">
+      <div className="flex h-11 items-center rounded-full border border-[#5f6368] bg-[#303134] px-3.5 min-[360px]:px-4 min-[600px]:h-12">
+        <Search size={18} className="mr-2.5 shrink-0 text-[#9aa0a6] min-[360px]:mr-3" />
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={searchQuery}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && hasActiveFilters) {
+              event.preventDefault();
+              clearSearch();
+            }
+          }}
+          placeholder="Search tasks"
+          className="w-full min-w-0 bg-transparent text-sm text-[#e8eaed] outline-none placeholder:text-[#9aa0a6]"
+        />
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#3c4043] hover:text-[#e8eaed]"
+            title="Clear search"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      {(searchFocused || hasActiveFilters) && (
+        <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-[1.25rem] border border-[#5f6368] bg-[#202124] p-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)] min-[360px]:rounded-[1.5rem] min-[360px]:p-4">
+          <div className="flex flex-wrap gap-2">
+            {SEARCH_FILTER_DEFINITIONS.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => toggleSearchFilter(filter.key)}
+                className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                  searchFilters[filter.key]
+                    ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
+                    : "border-[#5f6368] text-[#e8eaed] hover:border-[#8ab4f8]"
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center min-w-0 flex-1 max-w-[124px] min-[360px]:max-w-[160px] min-[400px]:max-w-sm sm:max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" size={13} />
-              <input
-                type="text"
-                placeholder="Search tasks"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full bg-surface-50 border border-surface-100 pl-8 pr-3 py-2 rounded-full text-[11px] sm:text-sm focus:ring-2 focus:ring-primary-500/20 transition-all outline-none"
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {NOTE_COLORS.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => toggleColorFilter(color.value)}
+                className={`h-8 w-8 rounded-full border transition-transform hover:scale-105 ${
+                  searchFilters.colors.includes(color.value)
+                    ? "ring-2 ring-[#8ab4f8] ring-offset-2 ring-offset-[#202124]"
+                    : ""
+                }`}
+                style={{ backgroundColor: color.fill, borderColor: color.border }}
+                title={color.label}
               />
-            </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <header className="sticky top-0 z-[60] border-b border-white/10 bg-[#202124]/95 backdrop-blur">
+      <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 min-[900px]:h-[76px] min-[900px]:flex-nowrap min-[900px]:px-6 min-[900px]:py-0">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#303134] hover:text-[#e8eaed]"
+          title="Toggle sidebar"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="flex min-w-0 flex-1 items-center gap-3 min-[600px]:flex-none min-[900px]:hidden">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#8ab4f8] font-bold text-[#202124]">
+            T
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-[#e8eaed] min-[360px]:text-base">TaskFlow</p>
+            <p className="hidden truncate text-xs text-[#9aa0a6] min-[420px]:block">Plan, track, organize</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          <div className="relative" ref={notificationsRef}>
-            <button
-              onClick={() => {
-                setShowNotifications((current) => !current);
-                setShowProfilePanel(false);
-              }}
-              className={`p-1.5 sm:p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors relative ${showNotifications ? "bg-surface-100" : ""}`}
-            >
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
+        {searchBar}
 
-            {showNotifications && (
-              <div className="fixed sm:absolute top-[68px] sm:top-full left-3 right-3 sm:left-auto sm:right-0 sm:w-80 bg-white rounded-2xl shadow-2xl border border-surface-100 py-0 animate-in fade-in zoom-in duration-150 origin-top sm:origin-top-right z-50 overflow-hidden max-h-[80vh] sm:max-h-none flex flex-col">
-                <div className="px-5 py-4 border-b border-surface-50 flex items-center justify-between bg-surface-50/30">
-                  <span className="text-xs font-black text-surface-900 uppercase tracking-widest">Notifications</span>
-                  {notifications.length > 0 && (
-                    <button
-                      onClick={handleClearNotifications}
-                      className="text-[10px] font-black text-primary-600 hover:text-primary-700 uppercase tracking-widest px-2 py-1 hover:bg-primary-50 rounded-md transition-all"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-                <div className="overflow-y-auto overscroll-contain px-2 py-2 flex-1 scrollbar-hide">
-                  {loadingNotifications ? (
-                    <div className="px-4 py-12 text-center">
-                      <Loader2 size={24} className="animate-spin text-primary-500 mx-auto" />
-                      <p className="text-[10px] text-surface-400 mt-3 font-black uppercase tracking-[0.2em]">Syncing Feed...</p>
-                    </div>
-                  ) : notifications.length > 0 ? (
-                    <div className="space-y-1 pb-2">
-                      {notifications.map((notification) => (
-                        <div key={notification._id} className="px-4 py-3.5 hover:bg-surface-50 rounded-xl cursor-pointer transition-all border-b border-surface-50 last:border-0 group">
-                          <p className="text-xs text-surface-800 font-bold leading-relaxed group-hover:text-primary-700">{notification.message}</p>
-                          <div className="flex items-center gap-1.5 mt-1.5 opacity-50">
-                            <Clock size={10} className="text-surface-400" />
-                            <span className="text-[9px] text-surface-400 font-bold uppercase tracking-tighter">
-                              {new Date(notification.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="px-4 py-12 text-center">
-                      <div className="w-12 h-12 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-surface-100 border-dashed">
-                        <Bell size={20} className="text-surface-200" />
-                      </div>
-                      <span className="text-xs text-surface-400 font-black uppercase tracking-widest">Inbox Zero!</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-3 border-t border-surface-50 bg-white sm:bg-surface-50/30">
-                  <button
-                    onClick={() => {
-                      setActiveView("mytasks");
-                      setShowNotifications(false);
-                    }}
-                    className="w-full py-3.5 sm:py-2.5 text-[10px] font-black text-white bg-surface-900 rounded-xl hover:bg-surface-800 transition-all uppercase tracking-[0.2em] shadow-lg"
-                  >
-                    View All History
-                  </button>
-                </div>
-              </div>
-            )}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 min-[360px]:gap-2 sm:gap-3">
+          <div className="hidden items-center rounded-full border border-[#5f6368] bg-[#303134] p-1 sm:flex">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                viewMode === "grid" ? "bg-[#8ab4f8] text-[#202124]" : "text-[#9aa0a6] hover:text-[#e8eaed]"
+              }`}
+              title="Grid view"
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                viewMode === "list" ? "bg-[#8ab4f8] text-[#202124]" : "text-[#9aa0a6] hover:text-[#e8eaed]"
+              }`}
+              title="List view"
+            >
+              <List size={16} />
+            </button>
           </div>
 
-          <div className="h-5 w-px bg-surface-100 hidden min-[360px]:block" />
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#303134] hover:text-[#e8eaed]"
+            title="Settings"
+          >
+            <Settings size={18} />
+          </button>
 
           <div className="relative" ref={profileRef}>
             <button
               type="button"
-              onClick={() => {
-                setShowProfilePanel((current) => !current);
-                setShowNotifications(false);
-              }}
-              className="flex items-center gap-2 rounded-full border border-transparent px-1.5 py-1 hover:bg-surface-50 hover:border-surface-200 transition-colors"
+              onClick={() => setShowProfileMenu((current) => !current)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#5f6368] bg-[#303134] text-sm font-semibold text-[#e8eaed] min-[360px]:h-11 min-[360px]:w-11"
+              title="Profile"
             >
-              <div className="flex flex-col text-right hidden min-[560px]:flex">
-                <span className="text-xs font-bold text-surface-900 leading-none">{user?.name || "User"}</span>
-                <span className="text-[10px] text-surface-500 mt-1">{user?.security?.twoFactorEnabled ? "Secured" : "Profile"}</span>
-              </div>
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-primary-500/20 flex items-center justify-center bg-gradient-to-br from-primary-500 to-indigo-600 text-white font-bold text-[10px] sm:text-xs">
-                {initials}
-              </div>
+              {user?.name?.slice(0, 1)?.toUpperCase() || "U"}
             </button>
 
-            {showProfilePanel && (
-              <div className="fixed sm:absolute top-[68px] sm:top-full left-3 right-3 sm:left-auto sm:right-0 sm:w-[22rem] bg-white rounded-[1.5rem] shadow-2xl border border-surface-100 p-4 sm:p-5 animate-in fade-in zoom-in duration-150 z-50">
-                <div className="rounded-[1.25rem] border border-surface-100 bg-gradient-to-br from-primary-50 via-white to-amber-50 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-lg shadow-primary-500/20">
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary-600">Profile</p>
-                      <p className="mt-2 text-base font-bold text-surface-900 break-words">{user?.name || "User"}</p>
-                      <div className="mt-1 flex items-start gap-2 text-xs text-surface-500">
-                        <Mail size={13} className="mt-0.5 shrink-0" />
-                        <span className="break-all">{user?.email || "name@example.com"}</span>
-                      </div>
-                    </div>
-                  </div>
+            {showProfileMenu && (
+              <div className="absolute right-0 top-full z-20 mt-2 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.5rem] border border-[#5f6368] bg-[#202124] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aa0a6]">Profile</p>
+                <p className="mt-3 text-base font-medium text-[#e8eaed]">{user?.name || "User"}</p>
+                <p className="mt-1 break-all text-sm text-[#9aa0a6]">{user?.email || "name@example.com"}</p>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-white/80 bg-white/80 px-3 py-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-surface-500">Joined</p>
-                      <p className="mt-2 text-sm font-semibold text-surface-900">{formatJoinedDate(user?.createdAt)}</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/80 bg-white/80 px-3 py-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-surface-500">Sign In</p>
-                      <p className="mt-2 text-sm font-semibold text-surface-900">{loginMethodsLabel}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${user?.security?.twoFactorEnabled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                    <ShieldCheck size={12} className="mr-1.5" />
-                    {user?.security?.twoFactorEnabled ? "Authenticator On" : "Setup Needed"}
-                  </span>
-                  <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] bg-surface-100 text-surface-600">
-                    {user?.role === "admin" ? "Admin Account" : "Member Account"}
-                  </span>
-                </div>
-
-                <p className="mt-4 text-xs text-surface-600">
-                  Open your profile settings to edit your name, review security, and manage authenticator-backed password changes.
-                </p>
-
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="mt-4 grid gap-2">
                   <button
                     type="button"
-                    onClick={openProfileSettings}
-                    className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] bg-surface-900 text-white hover:bg-surface-800"
+                    onClick={() => {
+                      onOpenSettings();
+                      setShowProfileMenu(false);
+                    }}
+                    className="rounded-full border border-[#5f6368] px-4 py-2 text-sm font-medium text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:text-[#8ab4f8]"
                   >
-                    <Settings size={14} className="mr-2" />
-                    Open Profile
+                    Open settings
                   </button>
                   <button
                     type="button"
                     onClick={logout}
-                    className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                    className="rounded-full border border-[#8c3c3c] px-4 py-2 text-sm font-medium text-[#f28b82] transition-colors hover:bg-[#47292b]"
                   >
-                    <LogOut size={14} className="mr-2" />
-                    Logout
+                    Sign out
                   </button>
                 </div>
               </div>
             )}
           </div>
-
-          <button
-            onClick={logout}
-            className="hidden sm:inline-flex p-1.5 text-surface-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-            title="Logout"
-          >
-            <LogOut size={14} />
-          </button>
         </div>
       </div>
     </header>

@@ -266,10 +266,10 @@ const TaskCollectionModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4">
+    <div className="fixed inset-0 z-[110] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-surface-900/50 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-[2rem] border border-surface-200 bg-white shadow-2xl">
+      <div className="relative w-full max-w-4xl max-h-[94vh] overflow-hidden rounded-t-[2rem] border border-surface-200 bg-white shadow-2xl sm:max-h-[92vh] sm:rounded-[2rem]">
         <div className="flex items-center justify-between gap-3 border-b border-surface-100 bg-gradient-to-r from-primary-50 via-white to-amber-50 px-4 py-4 sm:px-6 sm:py-5">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary-600">Task Card</p>
@@ -285,7 +285,7 @@ const TaskCollectionModal = ({
           </button>
         </div>
 
-        <div className="max-h-[calc(92vh-88px)] overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div className="max-h-[calc(94vh-76px)] overflow-y-auto p-4 sm:max-h-[calc(92vh-88px)] sm:p-6 space-y-6">
           {collectionMessage.text && (
             <div className={`rounded-2xl border px-4 py-3 text-sm font-medium ${messageTone}`}>
               {collectionMessage.text}
@@ -310,7 +310,7 @@ const TaskCollectionModal = ({
                   className="input-field py-3 text-sm"
                   placeholder="Card title"
                 />
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col min-[420px]:flex-row gap-3">
                   <button
                     type="button"
                     onClick={handleSaveCollectionTitle}
@@ -439,7 +439,7 @@ const TaskCollectionModal = ({
                         placeholder="Describe this note item"
                       />
 
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <div className="flex flex-col gap-3">
                         <div className="flex-1">
                           <TaskReminderFields
                             reminderValue={draft.reminder}
@@ -480,12 +480,12 @@ const TaskCollectionModal = ({
                           />
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-col min-[420px]:flex-row gap-3">
                           <button
                             type="button"
                             onClick={() => handleSaveItem(task)}
                             disabled={actionKey === `save-${task._id}`}
-                            className="btn-primary inline-flex items-center justify-center px-4 py-3"
+                            className="btn-primary inline-flex w-full min-[420px]:w-auto items-center justify-center px-4 py-3"
                           >
                             {actionKey === `save-${task._id}` ? <Loader2 size={15} className="mr-2 animate-spin" /> : <Save size={15} className="mr-2" />}
                             Save
@@ -494,7 +494,7 @@ const TaskCollectionModal = ({
                             type="button"
                             onClick={() => handleDeleteItem(task._id)}
                             disabled={actionKey === `delete-${task._id}`}
-                            className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                            className="inline-flex w-full min-[420px]:w-auto items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-60"
                           >
                             {actionKey === `delete-${task._id}` ? <Loader2 size={15} className="mr-2 animate-spin" /> : <Trash2 size={15} className="mr-2" />}
                             Delete

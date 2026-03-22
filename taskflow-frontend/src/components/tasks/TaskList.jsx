@@ -48,14 +48,14 @@ const TaskList = ({
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-8">
-      <div className="grid gap-3 min-[360px]:grid-cols-3">
+      <div className="grid gap-3 min-[360px]:grid-cols-2 xl:grid-cols-3">
         {summaryCards.map(({ label, value, icon, tone }) => (
           <div key={label} className={`rounded-2xl border px-4 py-4 ${tone}`}>
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-black uppercase tracking-[0.2em]">{label}</p>
               {icon}
             </div>
-            <p className="mt-3 text-2xl font-bold text-surface-900">{value}</p>
+            <p className="mt-3 text-xl sm:text-2xl font-bold text-surface-900">{value}</p>
           </div>
         ))}
       </div>

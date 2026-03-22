@@ -5,34 +5,35 @@ import Seo from "../components/common/Seo";
 
 const Privacy = () => {
   return (
-    <div className="min-h-screen bg-surface-50 p-6 md:p-12">
+    <div className="min-h-screen bg-surface-50 p-4 sm:p-6 md:p-12">
       <Seo
         title="Privacy Policy | TaskFlow"
         description="Read how TaskFlow handles account data, tasks, reminders, and security across the platform."
         path="/privacy"
       />
-      <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group">
           <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" />
           Back to Landing
         </Link>
         
         <header className="space-y-6">
-          <div className="w-20 h-20 bg-primary-100 text-primary-600 rounded-3xl flex items-center justify-center shadow-xl shadow-primary-500/10">
-            <ShieldCheck size={40} />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary-100 text-primary-600 rounded-3xl flex items-center justify-center shadow-xl shadow-primary-500/10">
+            <ShieldCheck size={32} className="sm:hidden" />
+            <ShieldCheck size={40} className="hidden sm:block" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-5xl font-bold text-surface-900 tracking-tight">Privacy Policy</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-surface-900 tracking-tight">Privacy Policy</h1>
             <p className="text-lg text-surface-500 font-medium tracking-wide uppercase">Last updated: March 15, 2026</p>
           </div>
-          <p className="text-xl text-surface-600 leading-relaxed max-w-3xl">
+          <p className="text-base sm:text-xl text-surface-600 leading-relaxed max-w-3xl">
             Your privacy is at the core of TaskFlow. We've built our platform with transparency and security in mind, ensuring your data remains yours.
           </p>
         </header>
 
         <div className="grid gap-8">
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-primary-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-primary-600">
                 <UserCheck size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">1. Information We Collect</h2>
             </div>
@@ -47,8 +48,8 @@ const Privacy = () => {
             </div>
           </section>
 
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-indigo-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-indigo-600">
                 <Eye size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">2. Data Usage & Transparency</h2>
             </div>
@@ -65,14 +66,14 @@ const Privacy = () => {
             </div>
           </section>
 
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-emerald-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-emerald-600">
                 <Lock size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">3. Security Architecture</h2>
             </div>
             <div className="space-y-4 text-surface-600 leading-relaxed">
                 <p>Your data is protected by industry-leading security protocols designed for high-stakes projects:</p>
-                <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                <div className="grid gap-4 pt-2 min-[420px]:grid-cols-2">
                     <div className="p-5 rounded-2xl bg-white border border-surface-100 space-y-2">
                         <h4 className="font-bold text-surface-900">AES-256 Encryption</h4>
                         <p className="text-sm">All task data is encrypted at rest using advanced standards.</p>
@@ -86,8 +87,8 @@ const Privacy = () => {
             </div>
           </section>
 
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-orange-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-orange-600">
                 <Server size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">4. Data Retention & Deletion</h2>
             </div>
@@ -101,7 +102,7 @@ const Privacy = () => {
             </div>
           </section>
 
-          <section className="py-12 text-center space-y-4">
+          <section className="py-10 sm:py-12 text-center space-y-4">
             <div className="w-12 h-1 bg-surface-200 mx-auto rounded-full"></div>
             <p className="text-surface-500 font-medium">Still have questions?</p>
             <p className="text-surface-400 max-w-lg mx-auto leading-relaxed">

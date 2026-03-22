@@ -34,9 +34,9 @@ const MessageBanner = ({ message }) => {
   }
 
   const styles = {
-    success: "border-green-100 bg-green-50 text-green-700",
-    error: "border-red-100 bg-red-50 text-red-700",
-    info: "border-primary-100 bg-primary-50 text-primary-700"
+    success: "border border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
+    error: "border border-rose-400/20 bg-rose-500/10 text-rose-100",
+    info: "border border-[#8ab4f8]/20 bg-[#8ab4f8]/10 text-[#dbe7ff]"
   };
 
   return (
@@ -192,12 +192,15 @@ const SecuritySettingsPanel = () => {
   };
 
   const handleCopySecret = async () => {
-    if (!twoFactorSetup?.secret || !navigator?.clipboard) {
+    const secretToCopy =
+      twoFactorSetup?.manualEntryKey?.replace(/\s+/g, "") || twoFactorSetup?.secret || "";
+
+    if (!secretToCopy || !navigator?.clipboard) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(twoFactorSetup.secret);
+      await navigator.clipboard.writeText(secretToCopy);
       setTwoFactorMessage({
         text: "Authenticator key copied to your clipboard.",
         type: "success"
@@ -363,14 +366,17 @@ const SecuritySettingsPanel = () => {
     }
   };
 
-  const cardClass = "max-w-4xl bg-white rounded-2xl border border-surface-200 overflow-hidden shadow-sm";
-  const inputClass = "w-full bg-surface-50 border-surface-200 rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all";
-  const dangerInputClass = "w-full bg-white border-red-200 rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all";
+  const cardClass = "w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-[#303134] shadow-[0_12px_30px_rgba(0,0,0,0.22)]";
+  const sectionHeaderClass = "border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(138,180,248,0.12),transparent_32%),linear-gradient(180deg,#303134_0%,#2a2b2f_100%)]";
+  const inputClass = "w-full rounded-lg border border-[#5f6368] bg-[#202124] px-4 py-2.5 text-sm text-[#e8eaed] outline-none transition-colors placeholder:text-[#9aa0a6] focus:border-[#8ab4f8]";
+  const dangerInputClass = "w-full rounded-lg border border-rose-400/20 bg-[#261b1d] px-4 py-2.5 text-sm text-rose-50 outline-none transition-colors placeholder:text-rose-200/60 focus:border-[#f28b82]";
+  const neutralButtonClass = "inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#202124] px-4 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:text-[#8ab4f8] disabled:opacity-60";
+  const primaryButtonClass = "inline-flex items-center justify-center rounded-xl border border-[#8ab4f8] bg-[#8ab4f8] px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-[#202124] transition-colors hover:bg-[#9fc1fa] disabled:opacity-60";
 
   if (isLoadingOverview) {
     return (
-      <div className="max-w-4xl bg-white rounded-2xl border border-surface-200 p-6 shadow-sm">
-        <div className="flex items-center text-sm text-surface-500">
+      <div className="w-full max-w-4xl rounded-2xl border border-white/10 bg-[#303134] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.22)] sm:p-6">
+        <div className="flex items-center text-sm text-[#9aa0a6]">
           <Loader2 size={16} className="mr-2 animate-spin" />
           Loading security settings...
         </div>
@@ -379,81 +385,81 @@ const SecuritySettingsPanel = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div className={cardClass}>
-        <div className="p-6 border-b border-surface-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-surface-50/50">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center">
+        <div className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6 ${sectionHeaderClass}`}>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#8ab4f8]/15 text-[#8ab4f8]">
               <Shield size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-surface-900">Security Center</h3>
-              <p className="text-xs text-surface-500">Manage sign-in methods, 2FA, sessions, and account deletion.</p>
+              <h3 className="text-sm font-bold text-[#e8eaed]">Security Center</h3>
+              <p className="text-xs text-[#9aa0a6]">Manage sign-in methods, 2FA, sessions, and account deletion.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => loadSecurityOverview()}
             disabled={isRefreshingOverview}
-            className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-[0.2em] border border-surface-200 bg-white text-surface-700 hover:border-primary-300 disabled:opacity-60"
+            className={`w-full sm:w-auto ${neutralButtonClass}`}
           >
             {isRefreshingOverview ? <Loader2 size={14} className="mr-2 animate-spin" /> : <RefreshCw size={14} className="mr-2" />}
             Refresh
           </button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           {overviewError && (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-medium text-red-700">
+            <div className="rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-xs font-medium text-rose-100">
               {overviewError}
             </div>
           )}
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-surface-100 bg-surface-50 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-surface-500">Password</p>
-              <p className="mt-2 text-lg font-bold text-surface-900">{securityState?.loginMethods?.password ? "Enabled" : "Not Set"}</p>
+          <div className="grid gap-4 min-[360px]:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-white/10 bg-[#202124] p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#9aa0a6]">Password</p>
+              <p className="mt-2 text-lg font-bold text-[#e8eaed]">{securityState?.loginMethods?.password ? "Enabled" : "Not Set"}</p>
             </div>
-            <div className="rounded-2xl border border-surface-100 bg-surface-50 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-surface-500">Google</p>
-              <p className="mt-2 text-lg font-bold text-surface-900">{securityState?.loginMethods?.google ? "Connected" : "Not Connected"}</p>
+            <div className="rounded-2xl border border-white/10 bg-[#202124] p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#9aa0a6]">Google</p>
+              <p className="mt-2 text-lg font-bold text-[#e8eaed]">{securityState?.loginMethods?.google ? "Connected" : "Not Connected"}</p>
             </div>
-            <div className="rounded-2xl border border-surface-100 bg-surface-50 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-surface-500">2FA</p>
-              <p className="mt-2 text-lg font-bold text-surface-900">{securityState?.twoFactor?.enabled ? "Enabled" : "Disabled"}</p>
+            <div className="rounded-2xl border border-white/10 bg-[#202124] p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#9aa0a6]">2FA</p>
+              <p className="mt-2 text-lg font-bold text-[#e8eaed]">{securityState?.twoFactor?.enabled ? "Enabled" : "Disabled"}</p>
             </div>
-            <div className="rounded-2xl border border-surface-100 bg-surface-50 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-surface-500">Sessions</p>
-              <p className="mt-2 text-lg font-bold text-surface-900">{securityState?.activeSessionCount || 0}</p>
+            <div className="rounded-2xl border border-white/10 bg-[#202124] p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#9aa0a6]">Sessions</p>
+              <p className="mt-2 text-lg font-bold text-[#e8eaed]">{securityState?.activeSessionCount || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
       <div className={cardClass}>
-        <div className="p-6 border-b border-surface-100 flex items-center space-x-3 bg-surface-50/50">
-          <div className="w-10 h-10 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center">
+        <div className={`flex items-start gap-3 p-4 sm:p-6 ${sectionHeaderClass}`}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#8ab4f8]/15 text-[#8ab4f8]">
             <KeyRound size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-surface-900">{securityState?.loginMethods?.password ? "Change Password" : "Set Password"}</h3>
-            <p className="text-xs text-surface-500">
+            <h3 className="text-sm font-bold text-[#e8eaed]">{securityState?.loginMethods?.password ? "Change Password" : "Set Password"}</h3>
+            <p className="text-xs text-[#9aa0a6]">
               {securityState?.loginMethods?.password
                 ? "Changing it signs out your other devices and always needs your authenticator code."
                 : "Create email/password access for this account after enabling the authenticator app."}
             </p>
           </div>
         </div>
-        <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+        <form onSubmit={handlePasswordSubmit} className="p-4 sm:p-6 space-y-4">
           <MessageBanner message={passwordMessage} />
           {!securityState?.twoFactor?.enabled && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
-              <p className="text-sm font-semibold text-surface-900">Authenticator setup is required first.</p>
-              <p className="mt-1 text-xs text-surface-600">
+            <div className="rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-4">
+              <p className="text-sm font-semibold text-amber-100">Authenticator setup is required first.</p>
+              <p className="mt-1 text-xs text-amber-50/80">
                 Password changes now use your authenticator app instead of paid OTP delivery.
               </p>
               <button
                 type="button"
                 onClick={scrollToTwoFactorSection}
-                className="mt-3 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.2em] border border-amber-200 bg-white text-amber-700 hover:bg-amber-100"
+                className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-amber-300/20 bg-[#202124] px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-amber-100 transition-colors hover:bg-amber-400/10 sm:w-auto"
               >
                 Set Up Authenticator
               </button>
@@ -461,23 +467,23 @@ const SecuritySettingsPanel = () => {
           )}
           {securityState?.loginMethods?.password && (
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-surface-700 uppercase tracking-wider">Current Password</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#bdc1c6]">Current Password</label>
               <input type="password" value={passwordForm.currentPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))} className={inputClass} required />
             </div>
           )}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-surface-700 uppercase tracking-wider">New Password</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#bdc1c6]">New Password</label>
               <input type="password" value={passwordForm.newPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))} className={inputClass} minLength={8} required />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-surface-700 uppercase tracking-wider">Confirm Password</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#bdc1c6]">Confirm Password</label>
               <input type="password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} className={inputClass} minLength={8} required />
             </div>
           </div>
           {securityState?.twoFactor?.enabled && (
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-surface-700 uppercase tracking-wider">Authenticator Code</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#bdc1c6]">Authenticator Code</label>
               <input type="text" inputMode="numeric" maxLength={6} value={passwordForm.totpCode} onChange={(event) => setPasswordForm((current) => ({ ...current, totpCode: event.target.value.replace(/\D/g, "").slice(0, 6) }))} className={inputClass} placeholder="123456" required />
             </div>
           )}
@@ -485,7 +491,7 @@ const SecuritySettingsPanel = () => {
             <button
               type="submit"
               disabled={isUpdatingPassword || !securityState?.twoFactor?.enabled}
-              className="btn-primary flex items-center px-6 py-2.5"
+              className={`w-full sm:w-auto ${primaryButtonClass}`}
             >
               {isUpdatingPassword ? <Loader2 size={16} className="mr-2 animate-spin" /> : <KeyRound size={16} className="mr-2" />}
               {securityState?.loginMethods?.password ? "Update Password" : "Create Password"}
@@ -495,45 +501,45 @@ const SecuritySettingsPanel = () => {
       </div>
 
       <div className={cardClass} id="two-factor-section">
-        <div className="p-6 border-b border-surface-100 flex items-center space-x-3 bg-surface-50/50">
-          <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+        <div className={`flex items-start gap-3 p-4 sm:p-6 ${sectionHeaderClass}`}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-200">
             <ShieldCheck size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-surface-900">Two-Factor Authentication</h3>
-            <p className="text-xs text-surface-500">Use any TOTP app, then enter the 6-digit code on login.</p>
+            <h3 className="text-sm font-bold text-[#e8eaed]">Two-Factor Authentication</h3>
+            <p className="text-xs text-[#9aa0a6]">Use any TOTP app, then enter the 6-digit code on login.</p>
           </div>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <MessageBanner message={twoFactorMessage} />
           {!securityState?.twoFactor?.enabled && !twoFactorSetup && (
-            <button type="button" onClick={handleStartTwoFactorSetup} disabled={isWorkingTwoFactor} className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 disabled:opacity-60">
+            <button type="button" onClick={handleStartTwoFactorSetup} disabled={isWorkingTwoFactor} className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-500/15 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-emerald-100 transition-colors hover:bg-emerald-500/20 disabled:opacity-60">
               {isWorkingTwoFactor ? <Loader2 size={14} className="mr-2 animate-spin" /> : <ShieldCheck size={14} className="mr-2" />}
               Start Setup
             </button>
           )}
           {!securityState?.twoFactor?.enabled && twoFactorSetup && (
-            <form onSubmit={handleConfirmTwoFactorSetup} className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+            <form onSubmit={handleConfirmTwoFactorSetup} className="space-y-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <p className="text-sm font-bold text-surface-900">Manual Setup Key</p>
-                  <p className="text-xs text-surface-600 mt-1">Add this key to Google Authenticator, 1Password, Authy, or Microsoft Authenticator.</p>
+                  <p className="text-sm font-bold text-[#e8eaed]">Manual Setup Key</p>
+                  <p className="mt-1 text-xs text-[#bdc1c6]">Add this key to Google Authenticator, 1Password, Authy, or Microsoft Authenticator.</p>
                 </div>
-                <button type="button" onClick={handleCopySecret} className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.2em] border border-surface-200 bg-white text-surface-700 hover:border-primary-300">
+                <button type="button" onClick={handleCopySecret} className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/10 bg-[#202124] px-3 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:text-[#8ab4f8]">
                   <Copy size={12} className="mr-2" />
                   Copy Key
                 </button>
               </div>
-              <div className="rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-semibold tracking-[0.24em] text-surface-900 break-all">
+              <div className="rounded-xl border border-white/10 bg-[#202124] px-4 py-3 text-sm font-semibold tracking-[0.24em] text-[#e8eaed] break-all">
                 {twoFactorSetup.manualEntryKey}
               </div>
               <input type="text" inputMode="numeric" maxLength={6} value={twoFactorSetupCode} onChange={(event) => setTwoFactorSetupCode(event.target.value.replace(/\D/g, "").slice(0, 6))} className={inputClass} placeholder="123456" required />
               <div className="flex flex-col sm:flex-row gap-3">
-                <button type="submit" disabled={isWorkingTwoFactor} className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 disabled:opacity-60">
+                <button type="submit" disabled={isWorkingTwoFactor} className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-500/15 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-emerald-100 transition-colors hover:bg-emerald-500/20 disabled:opacity-60">
                   {isWorkingTwoFactor ? <Loader2 size={14} className="mr-2 animate-spin" /> : <ShieldCheck size={14} className="mr-2" />}
                   Verify and Enable
                 </button>
-                <button type="button" onClick={handleStartTwoFactorSetup} disabled={isWorkingTwoFactor} className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border border-surface-200 bg-white text-surface-700 hover:border-primary-300 disabled:opacity-60">
+                <button type="button" onClick={handleStartTwoFactorSetup} disabled={isWorkingTwoFactor} className={`w-full sm:w-auto ${neutralButtonClass.replace("py-2.5", "py-3")}`}>
                   Regenerate Key
                 </button>
               </div>
@@ -543,7 +549,7 @@ const SecuritySettingsPanel = () => {
             <form onSubmit={handleDisableTwoFactor} className="space-y-4">
               {securityState?.loginMethods?.password && <input type="password" value={twoFactorDisableForm.currentPassword} onChange={(event) => setTwoFactorDisableForm((current) => ({ ...current, currentPassword: event.target.value }))} className={inputClass} placeholder="Current password" required />}
               <input type="text" inputMode="numeric" maxLength={6} value={twoFactorDisableForm.code} onChange={(event) => setTwoFactorDisableForm((current) => ({ ...current, code: event.target.value.replace(/\D/g, "").slice(0, 6) }))} className={inputClass} placeholder="Authenticator code" required />
-              <button type="submit" disabled={isWorkingTwoFactor} className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border bg-red-50 text-red-700 border-red-200 hover:bg-red-100 disabled:opacity-60">
+              <button type="submit" disabled={isWorkingTwoFactor} className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-rose-100 transition-colors hover:bg-rose-500/15 disabled:opacity-60">
                 {isWorkingTwoFactor ? <Loader2 size={14} className="mr-2 animate-spin" /> : <ShieldCheck size={14} className="mr-2" />}
                 Disable Two-Factor Auth
               </button>
@@ -553,41 +559,41 @@ const SecuritySettingsPanel = () => {
       </div>
 
       <div className={cardClass}>
-        <div className="p-6 border-b border-surface-100 flex items-center space-x-3 bg-surface-50/50">
-          <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+        <div className={`flex items-start gap-3 p-4 sm:p-6 ${sectionHeaderClass}`}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-400/15 text-amber-200">
             <Smartphone size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-surface-900">Active Sessions</h3>
-            <p className="text-xs text-surface-500">Review and sign out devices you do not recognize.</p>
+            <h3 className="text-sm font-bold text-[#e8eaed]">Active Sessions</h3>
+            <p className="text-xs text-[#9aa0a6]">Review and sign out devices you do not recognize.</p>
           </div>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <MessageBanner message={sessionsMessage} />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <p className="text-xs text-surface-600">Logging out all devices also clears saved browser reminder subscriptions.</p>
-            <button type="button" onClick={handleLogoutAllSessions} disabled={isSigningOutAll} className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border bg-surface-900 text-white border-surface-900 hover:bg-surface-800 disabled:opacity-60">
+            <p className="text-xs text-[#bdc1c6]">Logging out all devices also clears saved browser reminder subscriptions.</p>
+            <button type="button" onClick={handleLogoutAllSessions} disabled={isSigningOutAll} className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/10 bg-[#202124] px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:text-[#8ab4f8] disabled:opacity-60">
               {isSigningOutAll ? <Loader2 size={14} className="mr-2 animate-spin" /> : <LogOut size={14} className="mr-2" />}
               Logout All Devices
             </button>
           </div>
           <div className="space-y-3">
             {(securityState?.sessions || []).map((session) => (
-              <div key={session.id} className="rounded-2xl border border-surface-100 bg-surface-50 p-4 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div key={session.id} className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#202124] p-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-surface-900">{session.deviceLabel}</p>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${session.isCurrent ? "bg-primary-100 text-primary-700" : "bg-surface-200 text-surface-600"}`}>{session.isCurrent ? "Current" : "Active"}</span>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-amber-100 text-amber-700">{session.loginMethod}</span>
+                    <p className="text-sm font-bold text-[#e8eaed]">{session.deviceLabel}</p>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${session.isCurrent ? "bg-[#8ab4f8]/15 text-[#8ab4f8]" : "bg-white/10 text-[#bdc1c6]"}`}>{session.isCurrent ? "Current" : "Active"}</span>
+                    <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-100">{session.loginMethod}</span>
                   </div>
-                  <p className="text-xs text-surface-600">{session.browser} on {session.os}{session.ipAddress ? ` - ${session.ipAddress}` : ""}</p>
-                  <div className="text-[11px] text-surface-500 space-y-1">
+                  <p className="text-xs text-[#bdc1c6]">{session.browser} on {session.os}{session.ipAddress ? ` - ${session.ipAddress}` : ""}</p>
+                  <div className="space-y-1 text-[11px] text-[#9aa0a6]">
                     <p>Last active: {formatDateTime(session.lastActiveAt)}</p>
                     <p>Signed in: {formatDateTime(session.createdAt)}</p>
                     <p>{session.twoFactorVerified ? "Passed two-factor verification" : "No two-factor verification recorded"}</p>
                   </div>
                 </div>
-                <button type="button" onClick={() => handleSignOutSession(session)} disabled={activeSessionAction === session.id} className={`inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border ${session.isCurrent ? "bg-surface-900 text-white border-surface-900 hover:bg-surface-800" : "bg-white text-surface-700 border-surface-200 hover:border-primary-300"} disabled:opacity-60`}>
+                <button type="button" onClick={() => handleSignOutSession(session)} disabled={activeSessionAction === session.id} className={`inline-flex w-full lg:w-auto items-center justify-center rounded-xl border px-4 py-3 text-xs font-black uppercase tracking-[0.2em] ${session.isCurrent ? "border-white/10 bg-[#2f3743] text-[#dbe7ff] hover:border-[#8ab4f8]" : "border-white/10 bg-[#202124] text-[#e8eaed] hover:border-[#8ab4f8] hover:text-[#8ab4f8]"} disabled:opacity-60`}>
                   {activeSessionAction === session.id ? <Loader2 size={14} className="mr-2 animate-spin" /> : <LogOut size={14} className="mr-2" />}
                   {session.isCurrent ? "Logout This Device" : "Sign Out Device"}
                 </button>
@@ -597,14 +603,14 @@ const SecuritySettingsPanel = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl bg-red-50/60 border border-red-100 rounded-2xl p-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-red-100 text-red-700 flex items-center justify-center">
+      <div className="w-full max-w-4xl rounded-2xl border border-rose-400/20 bg-[#341f23] p-4 sm:p-6">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-100">
             <Trash2 size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-red-900">Delete Account</h3>
-            <p className="text-xs text-red-700 mt-1">This permanently removes your profile, tasks, notifications, sessions, and reminder subscriptions.</p>
+            <h3 className="text-sm font-bold text-rose-100">Delete Account</h3>
+            <p className="mt-1 text-xs text-rose-50/80">This permanently removes your profile, tasks, notifications, sessions, and reminder subscriptions.</p>
           </div>
         </div>
         <form onSubmit={handleDeleteAccount} className="mt-5 space-y-4">
@@ -612,7 +618,7 @@ const SecuritySettingsPanel = () => {
           <input type="text" value={deleteForm.confirmationText} onChange={(event) => setDeleteForm((current) => ({ ...current, confirmationText: event.target.value }))} placeholder={user?.email || "name@example.com"} className={dangerInputClass} required />
           {securityState?.loginMethods?.password && <input type="password" value={deleteForm.currentPassword} onChange={(event) => setDeleteForm((current) => ({ ...current, currentPassword: event.target.value }))} placeholder="Current password" className={dangerInputClass} required />}
           {securityState?.twoFactor?.enabled && <input type="text" inputMode="numeric" maxLength={6} value={deleteForm.totpCode} onChange={(event) => setDeleteForm((current) => ({ ...current, totpCode: event.target.value.replace(/\D/g, "").slice(0, 6) }))} placeholder="Authenticator code" className={dangerInputClass} required />}
-          <button type="submit" disabled={isDeletingAccount} className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-xs font-black uppercase tracking-[0.2em] border bg-red-600 text-white border-red-600 hover:bg-red-700 disabled:opacity-60">
+          <button type="submit" disabled={isDeletingAccount} className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-rose-400/20 bg-rose-500/15 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-rose-100 transition-colors hover:bg-rose-500/20 disabled:opacity-60">
             {isDeletingAccount ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Trash2 size={14} className="mr-2" />}
             Delete My Account
           </button>

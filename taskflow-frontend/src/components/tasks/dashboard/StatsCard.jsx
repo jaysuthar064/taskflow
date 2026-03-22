@@ -3,13 +3,13 @@ import API from "../../../api/axios";
 import { CheckCircle2, ListTodo, BarChart3 } from "lucide-react";
 
 const StatCard = ({ title, value, icon, color, bgColor }) => (
-    <div className="card flex items-center p-6 space-x-4">
-        <div className={`p-3 rounded-xl ${bgColor} ${color}`}>
+    <div className="card flex items-center p-4 sm:p-6 space-x-4">
+        <div className={`p-2.5 sm:p-3 rounded-xl ${bgColor} ${color}`}>
             {icon}
         </div>
         <div>
-            <p className="text-sm font-medium text-surface-500">{title}</p>
-            <p className="text-2xl font-bold text-surface-900">{value}</p>
+            <p className="text-xs sm:text-sm font-medium text-surface-500">{title}</p>
+            <p className="text-xl sm:text-2xl font-bold text-surface-900">{value}</p>
         </div>
     </div>
 );
@@ -51,7 +51,7 @@ const StatsCards = ({ refreshKey = 0 }) => {
     }, [refreshKey]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             <StatCard 
                 title="Total Tasks" 
                 value={stats.totalTasks} 

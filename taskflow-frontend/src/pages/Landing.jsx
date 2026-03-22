@@ -70,7 +70,7 @@ const Landing = () => {
         transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
         className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-surface-200"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <Motion.div 
             whileHover={{ scale: 1.05 }}
             className="flex items-center space-x-2 group cursor-pointer"
@@ -104,8 +104,8 @@ const Landing = () => {
       </Motion.nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 min-[360px]:pt-32 pb-16 min-[360px]:pb-20 px-4 sm:px-6 z-10">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 md:gap-16">
+      <section className="relative pt-24 min-[360px]:pt-32 pb-14 min-[360px]:pb-20 px-4 sm:px-6 z-10">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 sm:gap-10 md:gap-16">
           <Motion.div 
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -116,7 +116,7 @@ const Landing = () => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, type: "spring" }}
-              className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 text-primary-600 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
+              className="inline-flex items-center px-3.5 sm:px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 text-primary-600 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
             >
               <Zap size={14} className="mr-2 animate-pulse" />
               Tasks, notes, and reminders in one place
@@ -144,9 +144,9 @@ const Landing = () => {
               </Motion.div>
             </div>
             
-            <div className="flex flex-col space-y-4 pt-10">
+            <div className="flex flex-col space-y-4 pt-8 sm:pt-10">
                 <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Built for daily planning and team work</span>
-                <div className="flex items-center justify-center lg:justify-start space-x-4 opacity-50">
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-2 opacity-50">
                     <CheckCircle2 size={16} className="text-primary-500" />
                     <span className="text-xs font-bold text-surface-600">Interactive Cards</span>
                     <div className="w-1.5 h-1.5 rounded-full bg-surface-300" />
@@ -160,32 +160,32 @@ const Landing = () => {
             initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
             transition={{ duration: 1.2, delay: 0.4 }}
-            className="flex-1 relative"
+            className="flex-1 relative w-full max-w-xl lg:max-w-none"
           >
             <div className="absolute -inset-4 bg-primary-500/10 blur-[100px] rounded-full" />
             <Motion.div 
                whileHover={{ y: -10, rotate: -1 }}
-               className="relative card glass p-3 border-white/50 shadow-[0_22px_70px_4px_rgba(0,0,0,0.15)] overflow-hidden transition-all duration-700"
+               className="relative card glass p-2.5 sm:p-3 border-white/50 shadow-[0_22px_70px_4px_rgba(0,0,0,0.15)] overflow-hidden transition-all duration-700"
             >
                <div className="bg-surface-900 rounded-xl overflow-hidden aspect-[4/3] min-[500px]:aspect-video flex items-center justify-center group relative">
                   <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/10 to-transparent" />
-                  <div className="text-white text-center p-8 z-10 transition-transform duration-1000 group-hover:scale-110">
-                    <p className="text-primary-400 font-mono text-xs mb-6 uppercase tracking-[0.3em] font-bold">Live Dashboard View</p>
+                  <div className="text-white text-center p-4 sm:p-8 z-10 transition-transform duration-1000 group-hover:scale-110">
+                    <p className="text-primary-400 font-mono text-[10px] sm:text-xs mb-4 sm:mb-6 uppercase tracking-[0.24em] sm:tracking-[0.3em] font-bold">Live Dashboard View</p>
                     <div className="flex space-x-3 justify-center mb-8">
-                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="w-16 h-2 rounded-full bg-primary-500/40" />
-                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity, delay: 0.5 }} className="w-24 h-2 rounded-full bg-surface-700 font-bold" />
+                        <Motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="w-16 h-2 rounded-full bg-primary-500/40" />
+                        <Motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity, delay: 0.5 }} className="w-24 h-2 rounded-full bg-surface-700" />
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
-                        {[500, 700].map((delay, i) => (
+                    <div className="grid grid-cols-2 gap-3 sm:gap-6">
+                        {[500, 700].map((_, i) => (
                             <Motion.div 
                                 key={i}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 1 + (i * 0.2) }}
-                                className="aspect-square bg-surface-800/80 backdrop-blur rounded-2xl border border-white/10 p-6 flex flex-col justify-end shadow-2xl"
+                                className="aspect-square bg-surface-800/80 backdrop-blur rounded-2xl border border-white/10 p-4 sm:p-6 flex flex-col justify-end shadow-2xl"
                             >
-                                <div className={`w-full h-1 bg-${i === 0 ? "primary" : "indigo"}-500/40 rounded-full mb-3 mb-2`} />
-                                <div className={`w-2/3 h-1 bg-${i === 0 ? "primary" : "indigo"}-500/20 rounded-full`} />
+                                <div className={i === 0 ? "mb-2 h-1 w-full rounded-full bg-primary-500/40" : "mb-2 h-1 w-full rounded-full bg-indigo-500/40"} />
+                                <div className={i === 0 ? "h-1 w-2/3 rounded-full bg-primary-500/20" : "h-1 w-2/3 rounded-full bg-indigo-500/20"} />
                             </Motion.div>
                         ))}
                     </div>
@@ -197,14 +197,14 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 sm:py-32 bg-white relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="features" className="py-16 sm:py-24 lg:py-32 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <Motion.div 
             {...fadeInUp}
-            className="text-center max-w-3xl mx-auto mb-20 space-y-4"
+            className="text-center max-w-3xl mx-auto mb-12 sm:mb-20 space-y-4"
           >
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-surface-900 tracking-tight">Plan Faster, Miss Less</h2>
-            <p className="text-lg sm:text-xl text-surface-500 font-medium">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-surface-900 tracking-tight">Plan Faster, Miss Less</h2>
+            <p className="text-base sm:text-xl text-surface-500 font-medium">
               Create task cards, save notes, and manage reminders without switching between multiple tools.
             </p>
           </Motion.div>
@@ -214,7 +214,7 @@ const Landing = () => {
             initial="initial"
             whileInView="whileInView"
             viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid gap-4 sm:gap-8 min-[560px]:grid-cols-2 xl:grid-cols-3"
           >
             {[
               { 
@@ -256,9 +256,9 @@ const Landing = () => {
       {/* CTA Section */}
       <Motion.section 
         {...fadeInUp}
-        className="py-20 min-[360px]:py-28 px-4 sm:px-6 relative"
+        className="py-16 min-[360px]:py-24 px-4 sm:px-6 relative"
       >
-        <div className="max-w-6xl mx-auto bg-surface-900 rounded-3xl sm:rounded-[3rem] p-8 sm:p-16 md:p-24 text-center relative overflow-hidden shadow-3xl">
+        <div className="max-w-6xl mx-auto bg-surface-900 rounded-3xl sm:rounded-[3rem] p-6 sm:p-12 md:p-20 text-center relative overflow-hidden shadow-3xl">
           <Motion.div 
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
             transition={{ duration: 10, repeat: Infinity }}
@@ -271,8 +271,8 @@ const Landing = () => {
           />
           
           <div className="relative z-10 space-y-6 sm:space-y-8">
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">Your best work <br /> starts here.</h2>
-            <p className="text-base sm:text-lg md:text-2xl text-surface-400 max-w-3xl mx-auto leading-relaxed font-medium">
+            <h2 className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">Your best work <br className="hidden sm:block" /> starts here.</h2>
+            <p className="text-sm sm:text-lg md:text-2xl text-surface-400 max-w-3xl mx-auto leading-relaxed font-medium">
               Take control of your workflow with a tool built for precision and speed.
             </p>
             <div className="pt-4 flex justify-center">
@@ -292,9 +292,9 @@ const Landing = () => {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        className="py-16 border-t border-surface-200 bg-white"
+        className="py-12 sm:py-16 border-t border-surface-200 bg-white"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-8 sm:gap-12">
           <div className="flex flex-col items-center md:items-start space-y-6">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary-600 rounded flex items-center justify-center">
@@ -323,7 +323,7 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="flex items-center space-x-8">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
             <a href="https://www.linkedin.com/in/jayanti-lal-472548364/" target="_blank" rel="noopener noreferrer" className="text-surface-400 hover:text-[#0077B5] transition-all hover:scale-125">
               <span className="sr-only">LinkedIn</span>
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>

@@ -39,7 +39,7 @@ const TaskCard = ({
 }) => {
   const theme = getThemeForTitle(taskGroup.title);
   const completedCount = taskGroup.tasks.filter((task) => task.completed).length;
-  const previewTasks = taskGroup.tasks.slice(0, 4);
+  const previewTasks = taskGroup.tasks.slice(0, 3);
   const overdueCount = taskGroup.tasks.filter((task) => task.reminder && new Date(task.reminder) < new Date() && !task.completed).length;
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [newItemDescription, setNewItemDescription] = useState("");
@@ -116,7 +116,7 @@ const TaskCard = ({
           </p>
         </div>
 
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 flex items-center gap-2 self-start">
           <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${theme.tag}`}>
             {taskGroup.tasks.length} note{taskGroup.tasks.length === 1 ? "" : "s"}
           </span>
@@ -186,11 +186,11 @@ const TaskCard = ({
         <p className="mt-3 text-xs font-semibold text-red-700">{cardMessage}</p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-4 grid gap-2 min-[420px]:flex min-[420px]:flex-wrap min-[420px]:items-center">
         <button
           type="button"
           onClick={() => setIsComposerOpen(true)}
-          className="inline-flex items-center rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-surface-700 transition-colors hover:bg-white"
+          className="inline-flex w-full min-[420px]:w-auto items-center justify-center rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-surface-700 transition-colors hover:bg-white"
         >
           <Plus size={13} className="mr-1.5" />
           Add item
@@ -198,14 +198,14 @@ const TaskCard = ({
         <button
           type="button"
           onClick={() => onOpenCollection(taskGroup)}
-          className="inline-flex items-center rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-surface-600 transition-colors hover:bg-white"
+          className="inline-flex w-full min-[420px]:w-auto items-center justify-center rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-surface-600 transition-colors hover:bg-white"
         >
           Edit
         </button>
         <button
           type="button"
           onClick={handleDeleteCollection}
-          className="inline-flex items-center rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-50"
+          className="inline-flex w-full min-[420px]:w-auto items-center justify-center rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-50"
         >
           <Trash2 size={13} className="mr-1.5" />
           Delete
@@ -226,12 +226,12 @@ const TaskCard = ({
             placeholder="Add an item..."
             className="input-field min-h-[96px] resize-none border-white bg-white/90 py-3 text-sm"
           />
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-3 grid gap-2 min-[420px]:flex min-[420px]:flex-wrap min-[420px]:items-center">
             <button
               type="button"
               onClick={handleQuickAdd}
               disabled={isSavingItem}
-              className="btn-primary inline-flex items-center justify-center px-4 py-2.5 text-sm"
+              className="btn-primary inline-flex w-full min-[420px]:w-auto items-center justify-center px-4 py-2.5 text-sm"
             >
               {isSavingItem ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Plus size={14} className="mr-2" />}
               Save item
@@ -243,14 +243,14 @@ const TaskCard = ({
                 setNewItemDescription("");
                 setCardMessage("");
               }}
-              className="inline-flex items-center justify-center rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-semibold text-surface-600 transition-colors hover:bg-surface-50"
+              className="inline-flex w-full min-[420px]:w-auto items-center justify-center rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-semibold text-surface-600 transition-colors hover:bg-surface-50"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={() => onOpenCollection(taskGroup)}
-              className="inline-flex items-center justify-center rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-semibold text-surface-600 transition-colors hover:bg-surface-50"
+              className="inline-flex w-full min-[420px]:w-auto items-center justify-center rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-semibold text-surface-600 transition-colors hover:bg-surface-50"
             >
               More options
             </button>

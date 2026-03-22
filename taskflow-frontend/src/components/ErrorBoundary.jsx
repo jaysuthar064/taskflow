@@ -21,17 +21,18 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-6">
-          <div className="card glass max-w-lg w-full p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle size={32} />
+        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4 sm:p-6">
+          <div className="card glass max-w-lg w-full p-5 sm:p-8 text-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6">
+              <AlertTriangle size={28} className="sm:hidden" />
+              <AlertTriangle size={32} className="hidden sm:block" />
             </div>
-            <h1 className="text-2xl font-bold text-surface-900 mb-2">Something went wrong</h1>
-            <p className="text-surface-500 mb-8">
+            <h1 className="text-xl sm:text-2xl font-bold text-surface-900 mb-2">Something went wrong</h1>
+            <p className="text-sm sm:text-base text-surface-500 mb-6 sm:mb-8">
               An unexpected error occurred. We've been notified and are looking into it.
             </p>
             
-            <div className="bg-surface-100 p-4 rounded-xl mb-8 text-left overflow-hidden">
+            <div className="bg-surface-100 p-4 rounded-xl mb-6 sm:mb-8 text-left overflow-hidden">
                 <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Error Details</p>
                 <div className="text-sm font-mono text-red-600 break-words">
                     {this.state.errorMessage}

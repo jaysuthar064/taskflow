@@ -1,471 +1,742 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Archive, Bell, Plus, StickyNote, Trash2 } from "lucide-react";
+import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
-import TaskForm from "../components/tasks/TaskForm";
-import StatsCards from "../components/tasks/dashboard/StatsCard";
-import TaskList from "../components/tasks/TaskList";
-import TaskCollectionModal from "../components/tasks/TaskCollectionModal";
 import LoadingScreen from "../components/common/LoadingScreen";
-import API from "../api/axios";
-import { LayoutGrid, Plus } from "lucide-react";
-import MyTasksView from "../components/dashboard/MyTasksView";
-import SettingsView from "../components/dashboard/SettingsView";
-import ProductivityView from "../components/dashboard/ProductivityView";
-import ReminderList from "../components/tasks/ReminderList";
-import { usePushNotifications } from "../hooks/usePushNotifications";
-import { useMobileScheduledReminders } from "../hooks/useMobileScheduledReminders";
-import { getTaskCollectionKey, groupTasksByCollection } from "../components/tasks/taskCollections";
 import Seo from "../components/common/Seo";
+import SettingsView from "../components/dashboard/SettingsView";
+import LabelManagerModal from "../components/notes/LabelManagerModal";
+import NoteCard from "../components/notes/NoteCard";
+import NoteComposer from "../components/notes/NoteComposer";
+import NoteEditorModal from "../components/notes/NoteEditorModal";
+import Snackbar from "../components/notes/Snackbar";
+import {
+  createSearchFilters,
+  getSectionHeading,
+  getVisibleNotes,
+  mergeUniqueStrings,
+  normalizeChecklistItemsForDraft,
+  readStoredLabels,
+  SIDEBAR_SECTIONS,
+  writeStoredLabels
+} from "../components/notes/noteUtils";
+import { AuthContext } from "../context/auth-context";
+import { useAppInstallPrompt } from "../hooks/useAppInstallPrompt";
+import { useMobileScheduledReminders } from "../hooks/useMobileScheduledReminders";
+import { usePushNotifications } from "../hooks/usePushNotifications";
+
+const EMPTY_FILTERS = createSearchFilters();
 
 const getApiMessage = (error, fallback) => error.response?.data?.message || fallback;
 
-const Dashboard = ({ installSettings }) => {
-  const [tasks, setTasks] = useState([]);
-  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeView, setActiveView] = useState("dashboard");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCollectionKey, setActiveCollectionKey] = useState("");
+const Dashboard = () => {
+  const { user } = useContext(AuthContext);
+  const installSettings = useAppInstallPrompt();
   const notificationSettings = usePushNotifications();
-
-  const loadTasks = async ({ withLoader = false, canUpdate = () => true } = {}) => {
-    if (!localStorage.getItem("token")) {
-      if (canUpdate()) {
-        setIsLoading(false);
-      }
-      return [];
+  const searchInputRef = useRef(null);
+  const undoActionRef = useRef(null);
+  const undoTimeoutRef = useRef(null);
+  const actionHandlersRef = useRef({
+    handleArchiveNote: async () => {},
+    handleTrashNote: async () => {},
+    handleUndoSnackbar: async () => {}
+  });
+  const [notes, setNotes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState("notes");
+  const [selectedLabel, setSelectedLabel] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilters, setSearchFilters] = useState(EMPTY_FILTERS);
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof localStorage === "undefined") {
+      return "grid";
     }
 
-    if (withLoader && canUpdate()) {
+    return localStorage.getItem("taskflow:notes-view") || "grid";
+  });
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [labelCatalog, setLabelCatalog] = useState([]);
+  const [isLabelManagerOpen, setIsLabelManagerOpen] = useState(false);
+  const [activeNoteId, setActiveNoteId] = useState("");
+  const [snackbar, setSnackbar] = useState({ message: "", undoable: false });
+  const [composerLaunch, setComposerLaunch] = useState({ key: 0, type: "text" });
+
+  const persistLabels = (nextLabels) => {
+    setLabelCatalog(nextLabels);
+    writeStoredLabels(user?._id, nextLabels);
+  };
+
+  useEffect(() => {
+    setLabelCatalog(readStoredLabels(user?._id));
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("taskflow:notes-view", viewMode);
+    }
+  }, [viewMode]);
+
+  const loadNotes = async ({ withLoader = false } = {}) => {
+    if (withLoader) {
       setIsLoading(true);
     }
 
     try {
-      const response = await API.get("/tasks?all=true&sort=-createdAt");
-      const taskList = response.data?.data ?? response.data?.tasks ?? [];
-      const normalizedTasks = Array.isArray(taskList) ? taskList : [];
-
-      if (canUpdate()) {
-        setTasks(normalizedTasks);
-      }
-
-      return normalizedTasks;
+      const response = await API.get("/tasks?all=true");
+      const nextNotes = response.data?.data ?? response.data?.tasks ?? [];
+      setNotes(Array.isArray(nextNotes) ? nextNotes : []);
     } catch (error) {
-      console.error("Dashboard: Error fetching tasks", error);
-
-      if (canUpdate()) {
-        setTasks([]);
-      }
-
-      throw error;
+      console.error("Unable to load tasks", error);
+      setNotes([]);
     } finally {
-      if (withLoader && canUpdate()) {
-        setTimeout(() => {
-          if (canUpdate()) {
-            setIsLoading(false);
-          }
-        }, 800);
-      }
+      setIsLoading(false);
     }
   };
 
-  const matchesSearch = (task) =>
-    String(task.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-    String(task.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-
-  const filteredTasks = tasks.filter(matchesSearch);
-  const reminderTasks = tasks
-    .filter((task) => task.reminder && !task.completed)
-    .sort((firstTask, secondTask) => new Date(firstTask.reminder) - new Date(secondTask.reminder));
-
-  const allCollections = useMemo(() => groupTasksByCollection(tasks), [tasks]);
-  const activeCollection = useMemo(
-    () => allCollections.find((collection) => collection.id === activeCollectionKey) || null,
-    [activeCollectionKey, allCollections]
-  );
-
   useEffect(() => {
-    if (activeCollectionKey && !activeCollection) {
-      setActiveCollectionKey("");
-    }
-  }, [activeCollection, activeCollectionKey]);
+    loadNotes({ withLoader: true });
+  }, []);
 
   useMobileScheduledReminders({
-    tasks,
+    tasks: notes,
     enabled: notificationSettings.permission === "granted"
   });
 
-  const createTaskRecord = async ({ title, description, reminder, reminderRepeat, reminderWeekdays }) => {
-    try {
-      const response = await API.post("/tasks", {
-        title,
-        description,
-        reminder,
-        reminderRepeat,
-        reminderWeekdays
-      });
-      const createdTask = response.data?.data ?? response.data?.task ?? null;
+  const availableLabels = useMemo(
+    () => mergeUniqueStrings(labelCatalog, ...notes.map((note) => note.labels || [])),
+    [labelCatalog, notes]
+  );
 
-      if (!createdTask?._id) {
-        throw new Error("Unable to create this card.");
-      }
+  const visibleNotes = useMemo(
+    () =>
+      getVisibleNotes(notes, {
+        section: activeSection,
+        selectedLabel,
+        searchQuery,
+        filters: searchFilters
+      }),
+    [activeSection, notes, searchFilters, searchQuery, selectedLabel]
+  );
 
-      setTasks((previousTasks) => [createdTask, ...previousTasks]);
-      setStatsRefreshKey((previousKey) => previousKey + 1);
-      return createdTask;
-    } catch (error) {
-      throw new Error(getApiMessage(error, "Unable to create this card."));
-    }
-  };
-
-  const updateTaskRecord = async (taskId, updates, { refreshStats = false } = {}) => {
-    try {
-      const response = await API.patch(`/tasks/${taskId}`, updates);
-      const updatedTask = response.data?.data ?? response.data?.task ?? null;
-
-      if (!updatedTask?._id) {
-        throw new Error("Unable to save this card item.");
-      }
-
-      setTasks((previousTasks) =>
-        previousTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
-      );
-
-      if (refreshStats) {
-        setStatsRefreshKey((previousKey) => previousKey + 1);
-      }
-
-      return updatedTask;
-    } catch (error) {
-      throw new Error(getApiMessage(error, "Unable to save this card item."));
-    }
-  };
-
-  const deleteTaskRecord = async (taskId, { refreshStats = true } = {}) => {
-    const originalTasks = [...tasks];
-    setTasks((previousTasks) => previousTasks.filter((task) => task._id !== taskId));
-
-    if (refreshStats) {
-      setStatsRefreshKey((previousKey) => previousKey + 1);
-    }
-
-    try {
-      await API.delete(`/tasks/${taskId}`);
-    } catch (error) {
-      setTasks(originalTasks);
-
-      if (refreshStats) {
-        setStatsRefreshKey((previousKey) => previousKey - 1);
-      }
-
-      throw new Error(getApiMessage(error, "Unable to delete this card item."));
-    }
-  };
-
-  const toggleTaskRecord = async (task) => {
-    const originalTasks = [...tasks];
-    setTasks((previousTasks) =>
-      previousTasks.map((currentTask) =>
-        currentTask._id === task._id ? { ...currentTask, completed: !task.completed } : currentTask
-      )
-    );
-    setStatsRefreshKey((previousKey) => previousKey + 1);
-
-    try {
-      const response = await API.patch(`/tasks/${task._id}`, {
-        completed: !task.completed
-      });
-      const updatedTask = response.data?.data ?? response.data?.task ?? null;
-
-      if (!updatedTask?._id) {
-        throw new Error("Unable to update this card item.");
-      }
-
-      setTasks((previousTasks) =>
-        previousTasks.map((currentTask) => (currentTask._id === updatedTask._id ? updatedTask : currentTask))
-      );
-
-      return updatedTask;
-    } catch (error) {
-      setTasks(originalTasks);
-      setStatsRefreshKey((previousKey) => previousKey - 1);
-      throw new Error(getApiMessage(error, "Unable to update this card item."));
-    }
-  };
-
-  const renameCollectionRecord = async (collection, nextTitle) => {
-    try {
-      const updatedTasks = await Promise.all(
-        collection.tasks.map((task) =>
-          API.patch(`/tasks/${task._id}`, {
-            title: nextTitle
-          }).then((response) => response.data?.data ?? response.data?.task ?? null)
-        )
-      );
-
-      if (updatedTasks.some((task) => !task?._id)) {
-        throw new Error("Unable to rename this card.");
-      }
-
-      setTasks((previousTasks) =>
-        previousTasks.map((task) => updatedTasks.find((updatedTask) => updatedTask._id === task._id) || task)
-      );
-
-      setActiveCollectionKey(getTaskCollectionKey(nextTitle));
-    } catch (error) {
-      throw new Error(getApiMessage(error, "Unable to rename this card."));
-    }
-  };
-
-  const deleteCollectionRecord = async (collection) => {
-    const collectionTaskIds = new Set(collection.tasks.map((task) => task._id));
-    const originalTasks = [...tasks];
-
-    setTasks((previousTasks) => previousTasks.filter((task) => !collectionTaskIds.has(task._id)));
-    setStatsRefreshKey((previousKey) => previousKey + collection.tasks.length);
-
-    try {
-      await Promise.all(collection.tasks.map((task) => API.delete(`/tasks/${task._id}`)));
-    } catch (error) {
-      setTasks(originalTasks);
-      setStatsRefreshKey((previousKey) => previousKey - collection.tasks.length);
-      throw new Error(getApiMessage(error, "Unable to delete this card."));
-    }
-  };
-
-  const handleCreateTask = async (payload) => {
-    const createdTask = await createTaskRecord(payload);
-    setActiveCollectionKey(getTaskCollectionKey(createdTask.title));
-    setIsTaskModalOpen(false);
-    return createdTask;
-  };
-
-  const handleTaskCreated = async (newTask) => {
-    if (!newTask?._id) {
-      return;
-    }
-
-    setActiveCollectionKey(getTaskCollectionKey(newTask.title));
-    setIsTaskModalOpen(false);
-  };
-
-  const handleToggleTask = async (task) => {
-    try {
-      await toggleTaskRecord(task);
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  const handleDeleteTask = async (taskId) => {
-    if (!taskId) {
-      return;
-    }
-
-    try {
-      await deleteTaskRecord(taskId);
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  const handleDeleteCollection = async (collection) => {
-    const fullCollection = allCollections.find((existingCollection) => existingCollection.id === collection?.id) || collection;
-    return deleteCollectionRecord(fullCollection);
-  };
-
-  const handleQuickAddItem = (payload) => createTaskRecord(payload);
+  const activeNote = useMemo(
+    () => notes.find((note) => note._id === activeNoteId) || null,
+    [activeNoteId, notes]
+  );
 
   useEffect(() => {
-    let isMounted = true;
+    if (activeNoteId && !activeNote) {
+      setActiveNoteId("");
+    }
+  }, [activeNote, activeNoteId]);
 
-    if (!localStorage.getItem("token")) {
-      setIsLoading(false);
+  const showUndoSnackbar = (message, undoHandler) => {
+    if (undoTimeoutRef.current) {
+      window.clearTimeout(undoTimeoutRef.current);
+    }
+
+    undoActionRef.current = undoHandler;
+    setSnackbar({
+      message,
+      undoable: typeof undoHandler === "function"
+    });
+
+    undoTimeoutRef.current = window.setTimeout(() => {
+      undoActionRef.current = null;
+      setSnackbar({ message: "", undoable: false });
+    }, 5000);
+  };
+
+  const dismissSnackbar = () => {
+    if (undoTimeoutRef.current) {
+      window.clearTimeout(undoTimeoutRef.current);
+    }
+
+    undoActionRef.current = null;
+    setSnackbar({ message: "", undoable: false });
+  };
+
+  const handleUndoSnackbar = async () => {
+    if (undoActionRef.current) {
+      await undoActionRef.current();
+    }
+
+    dismissSnackbar();
+  };
+
+  const createNoteRecord = async (payload) => {
+    try {
+      const response = await API.post("/tasks", payload);
+      const createdNote = response.data?.data ?? null;
+
+      if (!createdNote?._id) {
+        throw new Error("Unable to create this task.");
+      }
+
+      setNotes((currentNotes) => [createdNote, ...currentNotes]);
+      if (createdNote.labels?.length) {
+        persistLabels(mergeUniqueStrings(labelCatalog, createdNote.labels));
+      }
+      setSelectedLabel("");
+      setActiveSection("notes");
+      return createdNote;
+    } catch (error) {
+      throw new Error(getApiMessage(error, "Unable to create this task."));
+    }
+  };
+
+  const updateNoteRecord = async (noteId, updates) => {
+    try {
+      const response = await API.patch(`/tasks/${noteId}`, updates);
+      const updatedNote = response.data?.data ?? response.data?.task ?? null;
+
+      if (!updatedNote?._id) {
+        throw new Error("Unable to update this task.");
+      }
+
+      setNotes((currentNotes) =>
+        currentNotes.map((note) => (note._id === updatedNote._id ? updatedNote : note))
+      );
+
+      if (updatedNote.labels?.length) {
+        persistLabels(mergeUniqueStrings(labelCatalog, updatedNote.labels));
+      }
+
+      return updatedNote;
+    } catch (error) {
+      throw new Error(getApiMessage(error, "Unable to update this task."));
+    }
+  };
+
+  const deleteNoteRecord = async (noteId) => {
+    try {
+      await API.delete(`/tasks/${noteId}`);
+      setNotes((currentNotes) => currentNotes.filter((note) => note._id !== noteId));
+    } catch (error) {
+      throw new Error(getApiMessage(error, "Unable to permanently delete this task."));
+    }
+  };
+
+  const ensureLabelExists = async (label) => {
+    const cleanLabel = String(label || "").trim().replace(/^#/, "");
+
+    if (!cleanLabel) {
       return;
     }
 
-    loadTasks({ withLoader: true, canUpdate: () => isMounted }).catch(() => {
-      if (isMounted) {
-        setIsLoading(false);
-      }
+    persistLabels(mergeUniqueStrings(labelCatalog, cleanLabel));
+  };
+
+  const handleArchiveNote = async (note) => {
+    const updatedNote = await updateNoteRecord(note._id, {
+      archived: !note.archived,
+      trashedAt: null
     });
 
-    return () => {
-      isMounted = false;
+    if (!note.archived) {
+      showUndoSnackbar("Task archived", async () => {
+        await updateNoteRecord(note._id, {
+          archived: false
+        });
+      });
+    } else {
+      dismissSnackbar();
+    }
+
+    return updatedNote;
+  };
+
+  const handleTrashNote = async (note) => {
+    const trashedAt = new Date().toISOString();
+    await updateNoteRecord(note._id, {
+      trashedAt,
+      archived: false,
+      pinned: false
+    });
+
+    showUndoSnackbar("Task moved to trash", async () => {
+      await updateNoteRecord(note._id, {
+        trashedAt: null
+      });
+    });
+  };
+
+  actionHandlersRef.current = {
+    handleArchiveNote,
+    handleTrashNote,
+    handleUndoSnackbar
+  };
+
+  const handleRestoreNote = async (note) => {
+    await updateNoteRecord(note._id, {
+      trashedAt: null
+    });
+  };
+
+  const handleDeleteForever = async (note) => {
+    const confirmed = window.confirm("Delete this task forever?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    await deleteNoteRecord(note._id);
+  };
+
+  const handleEmptyTrash = async () => {
+    const trashNotes = notes.filter((note) => Boolean(note.trashedAt));
+
+    if (trashNotes.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete ${trashNotes.length} task${trashNotes.length === 1 ? "" : "s"} forever?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    await Promise.all(trashNotes.map((note) => API.delete(`/tasks/${note._id}`)));
+    setNotes((currentNotes) => currentNotes.filter((note) => !note.trashedAt));
+    dismissSnackbar();
+  };
+
+  const handleTogglePin = async (note) => {
+    await updateNoteRecord(note._id, {
+      pinned: !note.pinned
+    });
+  };
+
+  const handleToggleChecklistItem = async (note, itemId) => {
+    const nextChecklistItems = normalizeChecklistItemsForDraft(note.checklistItems || []).map((item) =>
+      item.itemId === itemId ? { ...item, checked: !item.checked } : item
+    );
+
+    await updateNoteRecord(note._id, {
+      checklistItems: nextChecklistItems
+    });
+  };
+
+  const handleCreateLabel = async (rawLabel) => {
+    const cleanLabel = String(rawLabel || "").trim().replace(/^#/, "");
+
+    if (!cleanLabel) {
+      return;
+    }
+
+    persistLabels(mergeUniqueStrings(labelCatalog, cleanLabel));
+  };
+
+  const handleRenameLabel = async (previousLabel, nextLabel) => {
+    const cleanNextLabel = String(nextLabel || "").trim().replace(/^#/, "");
+
+    if (!cleanNextLabel || cleanNextLabel.toLowerCase() === previousLabel.toLowerCase()) {
+      return;
+    }
+
+    persistLabels(
+      mergeUniqueStrings(
+        labelCatalog.map((label) =>
+          label.toLowerCase() === previousLabel.toLowerCase() ? cleanNextLabel : label
+        )
+      )
+    );
+
+    const notesWithLabel = notes.filter((note) =>
+      (note.labels || []).some((label) => label.toLowerCase() === previousLabel.toLowerCase())
+    );
+
+    await Promise.all(
+      notesWithLabel.map((note) =>
+        updateNoteRecord(note._id, {
+          labels: (note.labels || []).map((label) =>
+            label.toLowerCase() === previousLabel.toLowerCase() ? cleanNextLabel : label
+          )
+        })
+      )
+    );
+
+    if (selectedLabel.toLowerCase() === previousLabel.toLowerCase()) {
+      setSelectedLabel(cleanNextLabel);
+    }
+  };
+
+  const handleDeleteLabel = async (labelToDelete) => {
+    const confirmed = window.confirm(`Delete label #${labelToDelete} from every task?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    persistLabels(labelCatalog.filter((label) => label.toLowerCase() !== labelToDelete.toLowerCase()));
+
+    const notesWithLabel = notes.filter((note) =>
+      (note.labels || []).some((label) => label.toLowerCase() === labelToDelete.toLowerCase())
+    );
+
+    await Promise.all(
+      notesWithLabel.map((note) =>
+        updateNoteRecord(note._id, {
+          labels: (note.labels || []).filter((label) => label.toLowerCase() !== labelToDelete.toLowerCase())
+        })
+      )
+    );
+
+    if (selectedLabel.toLowerCase() === labelToDelete.toLowerCase()) {
+      setSelectedLabel("");
+    }
+  };
+
+  const launchComposer = (type = "text") => {
+    setActiveSection("notes");
+    setComposerLaunch({
+      key: Date.now(),
+      type
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      const activeElement = document.activeElement;
+      const isTyping =
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "TEXTAREA" ||
+        activeElement?.tagName === "SELECT" ||
+        activeElement?.isContentEditable;
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        actionHandlersRef.current.handleUndoSnackbar();
+        return;
+      }
+
+      if (event.key === "/" && !isTyping) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (event.key === "Escape") {
+        if (activeNoteId) {
+          setActiveNoteId("");
+          return;
+        }
+
+        if (searchQuery || Object.values(searchFilters).some((value) => Array.isArray(value) ? value.length > 0 : value)) {
+          setSearchQuery("");
+          setSearchFilters(createSearchFilters());
+        }
+        return;
+      }
+
+      if (isTyping) {
+        return;
+      }
+
+      const lowerKey = event.key.toLowerCase();
+
+      if (lowerKey === "c") {
+        event.preventDefault();
+        launchComposer("text");
+        return;
+      }
+
+      if (lowerKey === "l") {
+        event.preventDefault();
+        launchComposer("checklist");
+        return;
+      }
+
+      const visibleNoteIds = visibleNotes.map((note) => note._id);
+      const currentIndex = visibleNoteIds.indexOf(activeNoteId);
+
+      if (lowerKey === "j" && visibleNoteIds.length > 0) {
+        event.preventDefault();
+        const nextIndex = currentIndex >= 0 && currentIndex < visibleNoteIds.length - 1 ? currentIndex + 1 : 0;
+        setActiveNoteId(visibleNoteIds[nextIndex]);
+        return;
+      }
+
+      if (lowerKey === "k" && visibleNoteIds.length > 0) {
+        event.preventDefault();
+        const nextIndex = currentIndex > 0 ? currentIndex - 1 : visibleNoteIds.length - 1;
+        setActiveNoteId(visibleNoteIds[nextIndex]);
+        return;
+      }
+
+      const selectedNote = notes.find((note) => note._id === activeNoteId);
+
+      if (!selectedNote) {
+        return;
+      }
+
+      if (lowerKey === "e") {
+        event.preventDefault();
+        actionHandlersRef.current.handleArchiveNote(selectedNote).catch(() => {});
+      }
+
+      if (event.key === "#") {
+        event.preventDefault();
+        actionHandlersRef.current.handleTrashNote(selectedNote).catch(() => {});
+      }
     };
-  }, []);
+
+    document.addEventListener("keydown", handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener("keydown", handleKeyboardShortcuts);
+    };
+  }, [activeNoteId, notes, searchFilters, searchQuery, visibleNotes]);
+
+  const pinnedNotes = activeSection === "notes"
+    ? visibleNotes.filter((note) => note.pinned)
+    : [];
+  const otherNotes = activeSection === "notes"
+    ? visibleNotes.filter((note) => !note.pinned)
+    : visibleNotes;
+  const sectionHeading = getSectionHeading(activeSection);
+
+  const renderNoteCollection = (noteCollection) => {
+    if (noteCollection.length === 0) {
+      return (
+        <div className="rounded-[1.5rem] border border-dashed border-[#5f6368] bg-[#303134] px-6 py-12 text-center text-[#9aa0a6]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">No tasks here</p>
+          <p className="mt-3 text-sm">
+            {activeSection === "trash"
+              ? "Trashed tasks will appear here until they are deleted forever."
+              : "Create a task or adjust your filters to see more results."}
+          </p>
+        </div>
+      );
+    }
+
+    if (viewMode === "list") {
+      return (
+        <div className="space-y-4">
+          {noteCollection.map((note) => (
+            <NoteCard
+              key={note._id}
+              note={note}
+              viewMode="list"
+              searchQuery={searchQuery}
+              isSelected={activeNoteId === note._id}
+              onSelect={setActiveNoteId}
+              onOpen={(selectedNote) => setActiveNoteId(selectedNote._id)}
+              onToggleChecklistItem={note.trashedAt ? null : handleToggleChecklistItem}
+              onTogglePin={handleTogglePin}
+              onArchive={note.trashedAt ? handleRestoreNote : handleArchiveNote}
+              onTrash={note.trashedAt ? handleDeleteForever : handleTrashNote}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="columns-1 gap-4 min-[480px]:columns-2 min-[900px]:columns-3 min-[1200px]:columns-4">
+        {noteCollection.map((note) => (
+          <div key={note._id} className="mb-4 break-inside-avoid">
+            <NoteCard
+              note={note}
+              viewMode="grid"
+              searchQuery={searchQuery}
+              isSelected={activeNoteId === note._id}
+              onSelect={setActiveNoteId}
+              onOpen={(selectedNote) => setActiveNoteId(selectedNote._id)}
+              onToggleChecklistItem={note.trashedAt ? null : handleToggleChecklistItem}
+              onTogglePin={handleTogglePin}
+              onArchive={note.trashedAt ? handleRestoreNote : handleArchiveNote}
+              onTrash={note.trashedAt ? handleDeleteForever : handleTrashNote}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 flex overflow-x-hidden">
+    <div className="min-h-screen bg-[#202124] min-[900px]:flex" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
       <Seo
         title="Dashboard | TaskFlow"
-        description="Manage your TaskFlow workspace."
+        description="Track tasks, reminders, checklists, attachments, and priorities in TaskFlow."
         path="/dashboard"
         robots="noindex,nofollow"
       />
+
       <Sidebar
-        isOpen={isSidebarOpen}
-        isHidden={false}
-        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        onNewTask={() => setIsTaskModalOpen(true)}
-        activeView={activeView}
-        setActiveView={setActiveView}
+        isMobileOpen={isMobileSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        activeSection={activeSection}
+        onChangeSection={setActiveSection}
+        labels={availableLabels}
+        selectedLabel={selectedLabel}
+        onSelectLabel={setSelectedLabel}
+        onOpenLabelManager={() => setIsLabelManagerOpen(true)}
+        onCreateNote={() => launchComposer("text")}
       />
 
-      <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
+      <div className="relative min-w-0 flex-1">
         <Navbar
           onToggleSidebar={() => {
-            if (window.innerWidth < 1024) {
-              setIsSidebarOpen(!isSidebarOpen);
+            if (typeof window !== "undefined" && window.innerWidth < 900) {
+              setIsMobileSidebarOpen((current) => !current);
+            } else {
+              setIsSidebarCollapsed((current) => !current);
             }
           }}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          setActiveView={setActiveView}
+          searchFilters={searchFilters}
+          setSearchFilters={setSearchFilters}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onOpenSettings={() => {
+            setSelectedLabel("");
+            setActiveSection("settings");
+          }}
+          searchInputRef={searchInputRef}
         />
 
-        <main className="flex-1 p-2 min-[360px]:p-3 sm:p-5 lg:p-6 overflow-y-auto overflow-x-hidden">
-          <div className="max-w-full space-y-6">
-            {activeView === "dashboard" && (
-              <>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <h1 className="text-xl font-bold text-surface-900 tracking-tight">Tasks</h1>
-                    <nav className="flex items-center text-[10px] font-bold text-surface-400 uppercase tracking-widest mt-1">
-                      <span>Workspace</span>
-                      <span className="mx-2">/</span>
-                      <span className="text-primary-600">Cards</span>
-                    </nav>
+        <main className="mx-auto max-w-[1400px] px-3 pb-28 pt-4 min-[360px]:pt-5 sm:px-4 min-[900px]:px-6 min-[900px]:pt-6">
+          {activeSection === "settings" ? (
+            <SettingsView
+              notificationSettings={notificationSettings}
+              installSettings={installSettings}
+            />
+          ) : (
+            <div className="space-y-6">
+              <section className="flex flex-col gap-4 min-[900px]:flex-row min-[900px]:items-end min-[900px]:justify-between">
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aa0a6]">
+                    {selectedLabel ? `Label / #${selectedLabel}` : SIDEBAR_SECTIONS.find((section) => section.id === activeSection)?.label || "TaskFlow"}
+                  </p>
+                  <h1 className="text-2xl font-medium text-[#e8eaed] min-[360px]:text-[2rem]">{sectionHeading.title}</h1>
+                  <p className="max-w-2xl text-sm leading-6 text-[#9aa0a6]">{sectionHeading.description}</p>
+                </div>
+
+                {activeSection === "trash" && (
+                  <button
+                    type="button"
+                    onClick={handleEmptyTrash}
+                    className="inline-flex items-center justify-center rounded-full border border-[#8c3c3c] px-4 py-2 text-sm font-medium text-[#f28b82] transition-colors hover:bg-[#47292b]"
+                  >
+                    <Trash2 size={16} className="mr-2" />
+                    Empty Trash
+                  </button>
+                )}
+              </section>
+
+              {activeSection === "notes" && (
+                <NoteComposer
+                  key={composerLaunch.key || "composer"}
+                  initialMode={composerLaunch.type}
+                  autoExpand={Boolean(composerLaunch.key)}
+                  onCreateNote={createNoteRecord}
+                  availableLabels={availableLabels}
+                  onEnsureLabel={ensureLabelExists}
+                />
+              )}
+
+              {activeSection === "notes" && pinnedNotes.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <PinlessLabel icon={<StickyNote size={16} />} label="PINNED" />
                   </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <button
-                      onClick={() => setIsTaskModalOpen(true)}
-                      className="btn-primary hidden sm:flex items-center shadow-sm rounded-2xl px-5 py-3"
-                    >
-                      <LayoutGrid size={16} className="mr-2" />
-                      <span className="text-xs uppercase tracking-wider font-bold">New Card</span>
-                    </button>
+                  {renderNoteCollection(pinnedNotes)}
+                </section>
+              )}
+
+              <section className="space-y-4">
+                {activeSection === "notes" && otherNotes.length > 0 && pinnedNotes.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <PinlessLabel icon={<StickyNote size={16} />} label="OTHERS" />
                   </div>
-                </div>
-
-                <div className="rounded-[1.75rem] border border-surface-200 bg-white/80 p-4 sm:p-5 shadow-sm">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary-600">Quick Start</p>
-                      <h2 className="mt-1 text-lg font-bold text-surface-900">Create a card, then open it to manage the items inside.</h2>
-                      <p className="mt-1 text-sm text-surface-600">
-                        Keep related work together and update everything from one place.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setIsTaskModalOpen(true)}
-                      className="inline-flex items-center justify-center rounded-2xl border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-bold text-primary-700 hover:bg-primary-100 transition-colors"
-                    >
-                      <Plus size={16} className="mr-2" />
-                      Create Card
-                    </button>
+                )}
+                {activeSection === "reminders" && (
+                  <div className="flex items-center gap-3">
+                    <PinlessLabel icon={<Bell size={16} />} label="UPCOMING" />
                   </div>
-                </div>
-
-                <div className="opacity-90">
-                  <StatsCards refreshKey={statsRefreshKey} />
-                </div>
-
-                <div className="pt-2">
-                  <TaskList
-                    tasks={filteredTasks}
-                    onOpenCollection={(collection) => setActiveCollectionKey(collection.id)}
-                    onToggleTask={handleToggleTask}
-                    onDeleteCollection={handleDeleteCollection}
-                    onQuickAddItem={handleQuickAddItem}
-                  />
-                </div>
-              </>
-            )}
-
-            {activeView === "mytasks" && (
-              <MyTasksView
-                tasks={filteredTasks}
-                onOpenCollection={(collection) => setActiveCollectionKey(collection.id)}
-                onToggleTask={handleToggleTask}
-                onDeleteCollection={handleDeleteCollection}
-                onQuickAddItem={handleQuickAddItem}
-              />
-            )}
-
-            {activeView === "productivity" && <ProductivityView setActiveView={setActiveView} />}
-
-            {activeView === "settings" && (
-              <SettingsView
-                notificationSettings={notificationSettings}
-                installSettings={installSettings}
-              />
-            )}
-
-            {activeView === "reminders" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div>
-                  <h2 className="text-xl font-bold text-surface-900 tracking-tight">Upcoming Reminders</h2>
-                  <p className="text-sm text-surface-500 mt-1">See upcoming reminder times for your open items.</p>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-surface-200 overflow-hidden">
-                  <ReminderList
-                    tasks={reminderTasks}
-                    onDelete={handleDeleteTask}
-                    onToggle={handleToggleTask}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+                )}
+                {activeSection === "archive" && (
+                  <div className="flex items-center gap-3">
+                    <PinlessLabel icon={<Archive size={16} />} label="ARCHIVED" />
+                  </div>
+                )}
+                {activeSection === "trash" && (
+                  <div className="flex items-center gap-3">
+                    <PinlessLabel icon={<Trash2 size={16} />} label="TRASH" />
+                  </div>
+                )}
+                {renderNoteCollection(otherNotes)}
+              </section>
+            </div>
+          )}
         </main>
       </div>
 
-      <button
-        onClick={() => setIsTaskModalOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[90] sm:hidden hover:scale-110 active:scale-90 transition-all duration-300 border-4 border-white"
-        title="Add New Card"
-      >
-        <Plus size={28} strokeWidth={3} />
-      </button>
-
-      {isTaskModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
-          <div
-            className="absolute inset-0 bg-surface-900/40 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsTaskModalOpen(false)}
-          />
-          <div className="relative w-full max-w-2xl animate-in fade-in zoom-in duration-200">
-            <TaskForm
-              onCreateTask={handleCreateTask}
-              onTaskCreated={handleTaskCreated}
-              onClose={() => setIsTaskModalOpen(false)}
-            />
-          </div>
-        </div>
+      {activeSection !== "settings" && (
+        <MobileCreateButton onCreateNote={() => launchComposer("text")} />
       )}
 
-      {activeCollection && (
-        <TaskCollectionModal
-          collection={activeCollection}
-          onClose={() => setActiveCollectionKey("")}
-          onRenameCollection={renameCollectionRecord}
-          onCreateCollectionItem={createTaskRecord}
-          onUpdateCollectionItem={(taskId, updates) => updateTaskRecord(taskId, updates)}
-          onDeleteCollectionItem={(taskId) => deleteTaskRecord(taskId)}
-          onToggleCollectionItem={toggleTaskRecord}
-          onDeleteCollection={deleteCollectionRecord}
+      <LabelManagerModal
+        key={availableLabels.join("|")}
+        isOpen={isLabelManagerOpen}
+        labels={availableLabels}
+        onClose={() => setIsLabelManagerOpen(false)}
+        onCreateLabel={handleCreateLabel}
+        onRenameLabel={handleRenameLabel}
+        onDeleteLabel={handleDeleteLabel}
+      />
+
+      {activeNote && (
+        <NoteEditorModal
+          key={activeNote._id}
+          note={activeNote}
+          searchQuery={searchQuery}
+          availableLabels={availableLabels}
+          onEnsureLabel={ensureLabelExists}
+          onUpdateNote={updateNoteRecord}
+          onTogglePin={handleTogglePin}
+          onArchive={handleArchiveNote}
+          onTrash={handleTrashNote}
+          onRestore={handleRestoreNote}
+          onDeleteForever={() => handleDeleteForever(activeNote)}
+          onClose={() => setActiveNoteId("")}
         />
       )}
+
+      <Snackbar
+        snackbar={snackbar}
+        onUndo={handleUndoSnackbar}
+        onDismiss={dismissSnackbar}
+      />
     </div>
   );
 };
+
+const PinlessLabel = ({ icon, label }) => (
+  <div className="inline-flex items-center rounded-full border border-white/10 bg-[#303134] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9aa0a6] min-[360px]:text-[11px] min-[360px]:tracking-[0.24em]">
+    <span className="mr-2 text-[#8ab4f8]">{icon}</span>
+    {label}
+  </div>
+);
+
+const MobileCreateButton = ({ onCreateNote }) => (
+  <button
+    type="button"
+    onClick={onCreateNote}
+    className="fixed bottom-5 right-4 z-[70] inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#feefc3] text-[#202124] shadow-[0_16px_32px_rgba(0,0,0,0.28)] transition-transform hover:scale-[1.03] max-[599px]:flex min-[600px]:hidden"
+    title="Create task"
+    aria-label="Create task"
+  >
+    <Plus size={24} />
+  </button>
+);
 
 export default Dashboard;

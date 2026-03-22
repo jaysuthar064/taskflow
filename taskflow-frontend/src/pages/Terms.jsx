@@ -5,34 +5,35 @@ import Seo from "../components/common/Seo";
 
 const Terms = () => {
   return (
-    <div className="min-h-screen bg-surface-50 p-6 md:p-12">
+    <div className="min-h-screen bg-surface-50 p-4 sm:p-6 md:p-12">
       <Seo
         title="Terms of Service | TaskFlow"
         description="Review the terms that apply when using TaskFlow for task management, reminders, and workspace organization."
         path="/terms"
       />
-      <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-3 duration-700">
+      <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 animate-in fade-in slide-in-from-bottom-3 duration-700">
         <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group">
           <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" />
           Back to Landing
         </Link>
         
         <header className="space-y-6">
-          <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-500/10">
-            <FileText size={40} />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-500/10">
+            <FileText size={32} className="sm:hidden" />
+            <FileText size={40} className="hidden sm:block" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-5xl font-bold text-surface-900 tracking-tight">Terms of Service</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-surface-900 tracking-tight">Terms of Service</h1>
             <p className="text-lg text-surface-500 font-medium tracking-wide uppercase">Last updated: March 15, 2026</p>
           </div>
-          <p className="text-xl text-surface-600 leading-relaxed max-w-3xl">
+          <p className="text-base sm:text-xl text-surface-600 leading-relaxed max-w-3xl">
             Welcome to TaskFlow. These terms govern your use of our project management platform. By using our service, you agree to these legal conditions.
           </p>
         </header>
 
         <div className="grid gap-8">
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-indigo-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-indigo-600">
                 <Globe size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">1. Acceptance & Scope</h2>
             </div>
@@ -42,8 +43,8 @@ const Terms = () => {
             </div>
           </section>
 
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-primary-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-primary-600">
                 <Scale size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">2. User Rights & Content</h2>
             </div>
@@ -56,8 +57,8 @@ const Terms = () => {
             </div>
           </section>
 
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-orange-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-orange-600">
                 <UserX size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">3. Prohibited Conduct</h2>
             </div>
@@ -74,13 +75,13 @@ const Terms = () => {
             </div>
           </section>
 
-          <section className="card glass p-8 md:p-10 space-y-6 border-white/40">
-            <div className="flex items-center space-x-4 text-red-600">
+          <section className="card glass p-5 sm:p-8 md:p-10 space-y-6 border-white/40">
+            <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:items-center text-red-600">
                 <AlertOctagon size={24} />
                 <h2 className="text-2xl font-bold text-surface-900">4. Liability Limitations</h2>
             </div>
-            <div className="space-y-4 text-surface-600 leading-relaxed uppercase font-mono text-sm tracking-tight">
-                <p className="p-4 bg-red-50 text-red-900 rounded-xl border border-red-100 leading-tight">
+            <div className="space-y-4 text-surface-600 leading-relaxed uppercase font-mono text-sm tracking-tight break-words">
+                <p className="p-4 bg-red-50 text-red-900 rounded-xl border border-red-100 leading-tight break-words">
                     "TASKFLOW IS PROVIDED 'AS IS' WITHOUT ANY WARRANTIES, EXPRESS OR IMPLIED. WE ARE NOT LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF THE SERVICE, INCLUDING DATA LOSS OR SERVICE INTERRUPTIONS."
                 </p>
                 <p className="text-xs text-surface-400 bg-transparent p-0">
@@ -89,7 +90,7 @@ const Terms = () => {
             </div>
           </section>
 
-          <section className="py-12 border-t border-surface-200">
+          <section className="py-10 sm:py-12 border-t border-surface-200">
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
                 <div className="space-y-2">
                     <h4 className="font-bold text-surface-900">Changes to Terms</h4>

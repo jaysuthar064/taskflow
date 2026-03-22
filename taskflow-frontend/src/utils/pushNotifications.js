@@ -7,6 +7,8 @@ export const isPushSupported = () => {
     );
 };
 
+const TASKFLOW_CACHE_PREFIXES = ["taskflow-static-", "taskflow-runtime-"];
+
 const urlBase64ToUint8Array = (base64String) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -21,12 +23,44 @@ const urlBase64ToUint8Array = (base64String) => {
 };
 
 export const registerPushServiceWorker = async () => {
-    if (!isPushSupported()) {
+    if (!isPushSupported() || !import.meta.env.PROD) {
         return null;
     }
 
-    await navigator.serviceWorker.register("/push-sw.js", { scope: "/" });
+    const registration = await navigator.serviceWorker.register("/push-sw.js", {
+        scope: "/",
+        updateViaCache: "none"
+    });
+    await registration.update();
     return navigator.serviceWorker.ready;
+};
+
+export const clearTaskflowServiceWorkerState = async () => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+        return;
+    }
+
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(
+        registrations
+            .filter((registration) =>
+                [registration.active, registration.waiting, registration.installing]
+                    .map((worker) => worker?.scriptURL || "")
+                    .some((scriptURL) => scriptURL.includes("/push-sw.js"))
+            )
+            .map((registration) => registration.unregister())
+    );
+
+    if (!("caches" in window)) {
+        return;
+    }
+
+    const cacheKeys = await caches.keys();
+    await Promise.all(
+        cacheKeys
+            .filter((cacheKey) => TASKFLOW_CACHE_PREFIXES.some((prefix) => cacheKey.startsWith(prefix)))
+            .map((cacheKey) => caches.delete(cacheKey))
+    );
 };
 
 export const getExistingPushSubscription = async () => {

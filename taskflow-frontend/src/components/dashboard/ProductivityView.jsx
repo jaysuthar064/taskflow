@@ -15,7 +15,7 @@ import {
 import API from "../../api/axios";
 
 const MetricCard = ({ title, value, icon, subtitle, trend, colorClass }) => (
-  <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/20 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
+  <div className="bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-white/20 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
     <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 ${colorClass} opacity-5 rounded-full group-hover:scale-125 transition-transform duration-700`} />
     <div className="flex justify-between items-start relative z-10">
       <div className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-opacity-100 flex items-center justify-center shadow-inner`}>
@@ -30,7 +30,7 @@ const MetricCard = ({ title, value, icon, subtitle, trend, colorClass }) => (
     </div>
     <div className="mt-5 relative z-10">
       <h3 className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em]">{title}</h3>
-      <p className="text-3xl font-black text-surface-900 mt-1.5 tracking-tighter">{value}</p>
+      <p className="text-2xl sm:text-3xl font-black text-surface-900 mt-1.5 tracking-tighter break-words">{value}</p>
       <p className="text-[10px] text-surface-500 mt-1.5 font-bold uppercase tracking-wider opacity-70">{subtitle}</p>
     </div>
   </div>
@@ -107,7 +107,7 @@ const ProductivityView = ({ setActiveView }) => {
   const productivityScore = Math.min(100, Math.round(volumePoints + consistencyPoints + efficiencyPoints));
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* Header with Glassmorphism Score */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="max-w-xl w-full">
@@ -163,7 +163,7 @@ const ProductivityView = ({ setActiveView }) => {
       ) : (
         <div className="grid gap-6">
           {/* Quick Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-4">
             <MetricCard 
                 title="Completion Rate" 
                 value={`${completionRate}%`} 
@@ -195,7 +195,7 @@ const ProductivityView = ({ setActiveView }) => {
           </div>
 
           {/* Main Analytics Chart */}
-          <div className="bg-white/80 backdrop-blur-md p-5 sm:p-8 rounded-[2.5rem] border border-white/20 shadow-2xl relative group overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md p-4 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-white/20 shadow-2xl relative group overflow-hidden">
             <div className="absolute top-0 right-0 p-5 sm:p-8 hidden sm:block">
                  <div className="flex gap-4">
                     <div className="flex items-center gap-2">
@@ -217,7 +217,8 @@ const ProductivityView = ({ setActiveView }) => {
                 <p className="text-[10px] sm:text-xs text-surface-400 mt-1 font-bold uppercase tracking-widest opacity-60">Last 7 cycle efficiency analysis</p>
             </div>
             
-            <div className="flex items-end justify-between h-48 sm:h-64 gap-2 sm:gap-6 px-1 sm:px-4 mt-4">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex min-w-[480px] items-end justify-between h-48 gap-2 px-1 mt-4 sm:h-64 sm:min-w-0 sm:gap-6 sm:px-4">
                 {stats.map((day, i) => {
                     const maxVal = Math.max(...stats.map(s => Math.max(s.completed, s.created, 1)));
                     const compHeight = (day.completed / maxVal) * 100;
@@ -251,12 +252,13 @@ const ProductivityView = ({ setActiveView }) => {
                         </div>
                     );
                 })}
+              </div>
             </div>
           </div>
 
           {/* Logic Explanation Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-             <div className="lg:col-span-2 bg-surface-900 rounded-3xl p-8 text-white relative overflow-hidden group">
+             <div className="lg:col-span-2 bg-surface-900 rounded-3xl p-5 sm:p-8 text-white relative overflow-hidden group">
                 <TrendingUp size={180} className="absolute -right-8 -bottom-8 text-white/5 rotate-6 group-hover:scale-110 transition-transform duration-700" />
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-4">
@@ -285,7 +287,7 @@ const ProductivityView = ({ setActiveView }) => {
                 </div>
              </div>
 
-             <div className="bg-gradient-to-br from-primary-600 to-indigo-700 rounded-3xl p-8 text-white flex flex-col justify-between group">
+             <div className="bg-gradient-to-br from-primary-600 to-indigo-700 rounded-3xl p-5 sm:p-8 text-white flex flex-col justify-between group">
                 <div>
                     <h3 className="text-lg font-black leading-tight uppercase tracking-tight">Maximize your Output</h3>
                     <p className="text-xs text-white/80 mt-3 leading-relaxed font-medium">
@@ -311,7 +313,7 @@ const ProductivityView = ({ setActiveView }) => {
                 onClick={() => setShowActivityLog(false)}
             />
             <div className="relative w-full sm:max-w-md bg-white h-full shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-in slide-in-from-right duration-700 overflow-hidden flex flex-col border-l border-white/20">
-                <div className="p-8 border-b border-surface-100 flex items-center justify-between bg-white/50 backdrop-blur-md">
+                <div className="p-4 sm:p-8 border-b border-surface-100 flex items-center justify-between bg-white/50 backdrop-blur-md">
                     <div>
                         <h3 className="text-xl font-black text-surface-900 uppercase tracking-tight">Activity Log</h3>
                         <p className="text-[10px] text-primary-500 font-black uppercase tracking-[0.2em] mt-1">Chronological history</p>
@@ -369,7 +371,7 @@ const ProductivityView = ({ setActiveView }) => {
                     )}
                 </div>
 
-                <div className="p-8 border-t border-surface-100 bg-white/50 backdrop-blur-md">
+                <div className="p-4 sm:p-8 border-t border-surface-100 bg-white/50 backdrop-blur-md">
                     <button 
                         onClick={() => {
                             setShowActivityLog(false);

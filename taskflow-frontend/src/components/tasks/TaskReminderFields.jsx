@@ -62,7 +62,7 @@ const TaskReminderFields = ({
           <p className="ml-1 text-[11px] font-black uppercase tracking-[0.2em] text-surface-500">
             Days
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-4 sm:flex sm:flex-wrap">
             {WEEKDAY_OPTIONS.map((dayOption) => {
               const isActive = reminderWeekdays.includes(dayOption.value);
 

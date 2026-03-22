@@ -12,6 +12,8 @@ const processDueReminders = async () => {
 
     const dueTasks = await Task.find({
         completed: false,
+        archived: false,
+        trashedAt: null,
         reminder: { $ne: null, $lte: now },
         reminderNotificationSentAt: null
     }).select("_id user title reminder reminderRepeat reminderWeekdays");
@@ -21,6 +23,8 @@ const processDueReminders = async () => {
             {
                 _id: task._id,
                 completed: false,
+                archived: false,
+                trashedAt: null,
                 reminder: { $ne: null, $lte: now },
                 reminderNotificationSentAt: null
             },
@@ -38,17 +42,19 @@ const processDueReminders = async () => {
             continue;
         }
 
+        const noteTitle = claimedTask.title || "Untitled note";
+
         await Notification.create({
             user: claimedTask.user,
-            message: buildReminderMessage(claimedTask.title),
+            message: buildReminderMessage(noteTitle),
             type: "reminder_due"
         });
 
         try {
             await sendPushToUser({
                 userId: claimedTask.user,
-                title: `TaskFlow Reminder: ${claimedTask.title}`,
-                body: buildReminderMessage(claimedTask.title),
+                title: `TaskFlow Reminder: ${noteTitle}`,
+                body: buildReminderMessage(noteTitle),
                 url: "/dashboard",
                 tag: `task-reminder-${claimedTask._id}`,
                 data: {

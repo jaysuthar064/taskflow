@@ -77,12 +77,12 @@ const TaskForm = ({ onCreateTask, onClose }) => {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto overflow-hidden rounded-[2rem] border border-surface-200 bg-white shadow-2xl">
+        <div className="w-full max-w-2xl mx-auto overflow-hidden rounded-t-[2rem] sm:rounded-[2rem] border border-surface-200 bg-white shadow-2xl">
             <div className="border-b border-surface-100 bg-gradient-to-r from-primary-50 via-white to-amber-50 px-4 py-4 sm:px-6 sm:py-5">
                 <div className="flex justify-between items-start gap-3">
                     <div>
                         <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary-600">New Card</p>
-                        <h2 className="mt-1 text-xl font-bold text-surface-900 flex items-center">
+                        <h2 className="mt-1 text-lg sm:text-xl font-bold text-surface-900 flex items-center">
                             <LayoutGrid className="mr-2 text-primary-600" size={22} />
                             Create Task Card
                         </h2>
