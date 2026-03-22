@@ -165,6 +165,39 @@ const normalizeReminderSettings = ({
     };
 };
 
+const areSameReminderDates = (firstValue, secondValue) => {
+    if (!firstValue && !secondValue) {
+        return true;
+    }
+
+    if (!firstValue || !secondValue) {
+        return false;
+    }
+
+    const firstDate = new Date(firstValue);
+    const secondDate = new Date(secondValue);
+
+    if (Number.isNaN(firstDate.getTime()) || Number.isNaN(secondDate.getTime())) {
+        return false;
+    }
+
+    return firstDate.getTime() === secondDate.getTime();
+};
+
+const areSameReminderWeekdays = (firstValue = [], secondValue = []) => {
+    if (firstValue.length !== secondValue.length) {
+        return false;
+    }
+
+    return firstValue.every((dayValue, index) => dayValue === secondValue[index]);
+};
+
+const hasReminderScheduleChanged = (existingTask, reminderSettings) => {
+    return !areSameReminderDates(existingTask.reminder, reminderSettings.reminder) ||
+        (existingTask.reminderRepeat || REMINDER_REPEAT_VALUES.ONCE) !== reminderSettings.reminderRepeat ||
+        !areSameReminderWeekdays(existingTask.reminderWeekdays || [], reminderSettings.reminderWeekdays || []);
+};
+
 const normalizeNoteType = (value) => {
     if (value === undefined) {
         return undefined;
@@ -662,7 +695,9 @@ const normalizeUpdatePayload = (body, existingTask) => {
         reminderRepeat: reminderSettings.reminderRepeat,
         reminderWeekdays: reminderSettings.reminderWeekdays,
         reminderPlace: reminderSettings.reminderPlace,
-        reminderNotificationSentAt: reminderSettings.reminder ? existingTask.reminderNotificationSentAt : null,
+        reminderNotificationSentAt: !reminderSettings.reminder || hasReminderScheduleChanged(existingTask, reminderSettings)
+            ? null
+            : existingTask.reminderNotificationSentAt,
         user: existingTask.user
     });
 };

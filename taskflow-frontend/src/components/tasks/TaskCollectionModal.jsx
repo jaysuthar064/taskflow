@@ -353,14 +353,9 @@ const TaskCollectionModal = ({
                   reminderValue={newItemReminder}
                   onReminderChange={setNewItemReminder}
                   reminderRepeat={newItemReminderRepeat}
-                  onReminderRepeatChange={(value) => {
-                    setNewItemReminderRepeat(value);
-
-                    if (value !== "weekly") {
-                      setNewItemReminderWeekdays([]);
-                    }
-                  }}
+                  onReminderRepeatChange={setNewItemReminderRepeat}
                   reminderWeekdays={newItemReminderWeekdays}
+                  onReminderWeekdaysChange={setNewItemReminderWeekdays}
                   onToggleWeekday={(weekdayValue) =>
                     setNewItemReminderWeekdays((currentWeekdays) => toggleReminderWeekday(currentWeekdays, weekdayValue))
                   }
@@ -458,14 +453,20 @@ const TaskCollectionModal = ({
                                 ...current,
                                 [task._id]: {
                                   ...current[task._id],
-                                  reminderRepeat: value,
-                                  reminderWeekdays: value === "weekly"
-                                    ? current[task._id]?.reminderWeekdays || []
-                                    : []
+                                  reminderRepeat: value
                                 }
                               }))
                             }
                             reminderWeekdays={draft.reminderWeekdays || []}
+                            onReminderWeekdaysChange={(value) =>
+                              setDrafts((current) => ({
+                                ...current,
+                                [task._id]: {
+                                  ...current[task._id],
+                                  reminderWeekdays: value
+                                }
+                              }))
+                            }
                             onToggleWeekday={(weekdayValue) =>
                               setDrafts((current) => ({
                                 ...current,

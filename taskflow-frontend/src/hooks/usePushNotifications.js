@@ -3,6 +3,7 @@ import API from "../api/axios";
 import {
     getExistingPushSubscription,
     isPushSupported,
+    registerPushServiceWorker,
     subscribeToPush
 } from "../utils/pushNotifications";
 
@@ -67,10 +68,23 @@ export const usePushNotifications = () => {
                 getExistingPushSubscription()
             ]);
 
-            if (subscription) {
+            let nextSubscription = subscription;
+
+            if (!nextSubscription && Notification.permission === "granted" && config.configured && config.publicKey) {
+                try {
+                    nextSubscription = await subscribeToPush(config.publicKey);
+                    await API.post("/push/subscriptions", {
+                        subscription: nextSubscription.toJSON()
+                    });
+                } catch (error) {
+                    console.error("Unable to restore push subscription", error);
+                }
+            }
+
+            if (nextSubscription) {
                 try {
                     await API.post("/push/subscriptions", {
-                        subscription: subscription.toJSON()
+                        subscription: nextSubscription.toJSON()
                     });
                 } catch (error) {
                     console.error("Unable to sync existing push subscription", error);
@@ -80,7 +94,7 @@ export const usePushNotifications = () => {
             setState({
                 supported: true,
                 configured: config.configured,
-                subscribed: Boolean(subscription),
+                subscribed: Boolean(nextSubscription),
                 permission: Notification.permission,
                 publicKey: config.publicKey,
                 loading: false,
@@ -120,28 +134,6 @@ export const usePushNotifications = () => {
         }));
 
         try {
-            let { publicKey, configured, error } = state;
-
-            if (!configured || !publicKey) {
-                const config = await loadPublicKey();
-                publicKey = config.publicKey;
-                configured = config.configured;
-                error = config.error;
-            }
-
-            if (!configured || !publicKey) {
-                setState((prevState) => ({
-                    ...prevState,
-                    configured,
-                    publicKey,
-                    permission: Notification.permission,
-                    loading: false,
-                    ready: true,
-                    error
-                }));
-                return false;
-            }
-
             let permission = Notification.permission;
 
             if (permission !== "granted") {
@@ -162,7 +154,32 @@ export const usePushNotifications = () => {
                 return false;
             }
 
-            const subscription = await subscribeToPush(publicKey);
+            await registerPushServiceWorker();
+
+            let { publicKey, configured, error } = state;
+
+            if (!configured || !publicKey) {
+                const config = await loadPublicKey();
+                publicKey = config.publicKey;
+                configured = config.configured;
+                error = config.error;
+            }
+
+            if (!configured || !publicKey) {
+                setState((prevState) => ({
+                    ...prevState,
+                    configured: false,
+                    subscribed: false,
+                    permission,
+                    publicKey: "",
+                    loading: false,
+                    ready: true,
+                    error: error || "Browser notifications are enabled, but server push is not configured."
+                }));
+                return true;
+            }
+
+            const subscription = await getExistingPushSubscription() || await subscribeToPush(publicKey);
 
             await API.post("/push/subscriptions", {
                 subscription: subscription.toJSON()

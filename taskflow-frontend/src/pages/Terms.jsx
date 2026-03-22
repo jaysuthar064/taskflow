@@ -4,12 +4,47 @@ import { ArrowLeft, FileText, Scale, AlertOctagon, UserX, Globe } from "lucide-r
 import Seo from "../components/common/Seo";
 
 const Terms = () => {
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const toSchemaUrl = (path) => siteUrl ? `${siteUrl}${path}` : path;
+  const termsSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Terms of Service | TaskFlow",
+    url: toSchemaUrl("/terms"),
+    description: "Review the terms that apply when using TaskFlow for task management, reminders, and workspace organization."
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: toSchemaUrl("/")
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Terms of Service",
+        item: toSchemaUrl("/terms")
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-surface-50 p-4 sm:p-6 md:p-12">
       <Seo
         title="Terms of Service | TaskFlow"
         description="Review the terms that apply when using TaskFlow for task management, reminders, and workspace organization."
         path="/terms"
+        keywords={[
+          "taskflow terms",
+          "task app terms of service",
+          "workspace app legal terms",
+          "task reminder platform terms"
+        ]}
+        schema={[termsSchema, breadcrumbSchema]}
       />
       <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 animate-in fade-in slide-in-from-bottom-3 duration-700">
         <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group">

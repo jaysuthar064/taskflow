@@ -127,26 +127,33 @@ const SettingsView = ({ notificationSettings, installSettings }) => {
   const isPushActionDisabled =
     pushLoading ||
     !pushReady ||
-    (pushPermission === "denied" && !pushSubscribed) ||
-    (!pushConfigured && !pushSubscribed);
+    (pushPermission === "denied" && !pushSubscribed);
 
   const pushButtonLabel = pushLoading
     ? "Updating..."
     : pushSubscribed
       ? "Disable Notifications"
-      : pushPermission === "denied"
-        ? "Notifications Blocked"
-        : "Enable Notifications";
+      : pushPermission === "granted"
+        ? pushConfigured
+          ? "Enable Push Delivery"
+          : "Notifications Allowed"
+        : pushPermission === "denied"
+          ? "Notifications Blocked"
+          : "Enable Notifications";
 
   const pushStatusLabel = !pushSupported
     ? "Unsupported"
     : pushSubscribed
       ? "Enabled"
-      : pushPermission === "denied"
-        ? "Blocked"
-        : pushConfigured
-          ? "Disabled"
-          : "Server Setup Needed";
+      : pushPermission === "granted"
+        ? pushConfigured
+          ? "Ready"
+          : "Local Only"
+        : pushPermission === "denied"
+          ? "Notifications Blocked"
+          : pushConfigured
+            ? "Disabled"
+            : "Server Setup Needed";
 
   const installStatusLabel = isInstalled
     ? "Installed"

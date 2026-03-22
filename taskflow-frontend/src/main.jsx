@@ -11,6 +11,9 @@ import {
 
 if (typeof window !== "undefined") {
   let hasRefreshedForServiceWorker = false;
+  const canUsePushServiceWorker =
+    import.meta.env.PROD ||
+    ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -24,7 +27,7 @@ if (typeof window !== "undefined") {
   }
 
   window.addEventListener("load", () => {
-    if (import.meta.env.PROD) {
+    if (canUsePushServiceWorker) {
       registerPushServiceWorker().catch((error) => {
         console.error("Unable to register push service worker", error);
       });

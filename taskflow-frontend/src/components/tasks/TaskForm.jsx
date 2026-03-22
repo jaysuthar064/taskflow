@@ -153,14 +153,9 @@ const TaskForm = ({ onCreateTask, onClose }) => {
                             reminderValue={reminder}
                             onReminderChange={setReminder}
                             reminderRepeat={reminderRepeat}
-                            onReminderRepeatChange={(value) => {
-                                setReminderRepeat(value);
-
-                                if (value !== "weekly") {
-                                    setReminderWeekdays([]);
-                                }
-                            }}
+                            onReminderRepeatChange={setReminderRepeat}
                             reminderWeekdays={reminderWeekdays}
+                            onReminderWeekdaysChange={setReminderWeekdays}
                             onToggleWeekday={(weekdayValue) =>
                                 setReminderWeekdays((currentWeekdays) => toggleReminderWeekday(currentWeekdays, weekdayValue))
                             }

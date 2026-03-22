@@ -4,12 +4,47 @@ import { ArrowLeft, ShieldCheck, Lock, Eye, Server, UserCheck } from "lucide-rea
 import Seo from "../components/common/Seo";
 
 const Privacy = () => {
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const toSchemaUrl = (path) => siteUrl ? `${siteUrl}${path}` : path;
+  const privacySchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Privacy Policy | TaskFlow",
+    url: toSchemaUrl("/privacy"),
+    description: "Read how TaskFlow handles account data, tasks, reminders, and security across the platform."
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: toSchemaUrl("/")
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Privacy Policy",
+        item: toSchemaUrl("/privacy")
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-surface-50 p-4 sm:p-6 md:p-12">
       <Seo
         title="Privacy Policy | TaskFlow"
         description="Read how TaskFlow handles account data, tasks, reminders, and security across the platform."
         path="/privacy"
+        keywords={[
+          "taskflow privacy policy",
+          "task app privacy",
+          "reminder app security",
+          "data handling policy"
+        ]}
+        schema={[privacySchema, breadcrumbSchema]}
       />
       <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group">

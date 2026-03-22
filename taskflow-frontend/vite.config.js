@@ -25,11 +25,12 @@ Disallow: /auth/
 Sitemap: ${siteUrl}/sitemap.xml
 `;
 
-const buildSitemapXml = (siteUrl) => {
+const buildSitemapXml = (siteUrl, lastModified) => {
   const urls = seoRoutes
     .map(
       ({ path: routePath, changefreq, priority }) => `  <url>
     <loc>${siteUrl}${routePath}</loc>
+    <lastmod>${lastModified}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`
@@ -47,13 +48,14 @@ const seoFilesPlugin = (siteUrl) => ({
   name: "taskflow-seo-files",
   closeBundle() {
     const outputDirectory = path.resolve(rootDirectory, "dist");
+    const lastModified = new Date().toISOString();
 
     if (!fs.existsSync(outputDirectory)) {
       return;
     }
 
     fs.writeFileSync(path.join(outputDirectory, "robots.txt"), buildRobotsTxt(siteUrl), "utf8");
-    fs.writeFileSync(path.join(outputDirectory, "sitemap.xml"), buildSitemapXml(siteUrl), "utf8");
+    fs.writeFileSync(path.join(outputDirectory, "sitemap.xml"), buildSitemapXml(siteUrl, lastModified), "utf8");
   }
 });
 

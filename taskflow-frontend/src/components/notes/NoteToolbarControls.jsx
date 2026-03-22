@@ -4,7 +4,6 @@ import {
   Bell,
   CheckSquare,
   ImagePlus,
-  MapPin,
   MoreVertical,
   Palette,
   Plus,
@@ -14,6 +13,16 @@ import {
   UserPlus
 } from "lucide-react";
 import { NOTE_BACKGROUNDS, NOTE_COLORS, createChecklistItem, mergeUniqueStrings } from "./noteUtils";
+import {
+  getDefaultReminderWeekdays,
+  getLocalMinReminder,
+  getReminderMode,
+  REMINDER_MODE_OPTIONS,
+  REMINDER_MODE_VALUES,
+  REMINDER_REPEAT_VALUES,
+  toggleReminderWeekday,
+  WEEKDAY_OPTIONS
+} from "../tasks/taskReminderUtils";
 
 const getDateTimeValue = (date) => {
   if (!date) {
@@ -42,6 +51,18 @@ const toIsoOrNull = (value) => {
 const getReminderPreset = (preset) => {
   const now = new Date();
 
+  if (preset === "oneMinute") {
+    const nextMinute = new Date(now.getTime() + 60 * 1000);
+    nextMinute.setSeconds(0, 0);
+    return nextMinute.toISOString();
+  }
+
+  if (preset === "fiveMinutes") {
+    const nextFiveMinutes = new Date(now.getTime() + 5 * 60 * 1000);
+    nextFiveMinutes.setSeconds(0, 0);
+    return nextFiveMinutes.toISOString();
+  }
+
   if (preset === "laterToday") {
     const laterToday = new Date(now);
     laterToday.setHours(Math.max(now.getHours() + 3, 18), 0, 0, 0);
@@ -61,11 +82,30 @@ const getReminderPreset = (preset) => {
   return nextWeek.toISOString();
 };
 
+const getReminderPreviewText = (date) => {
+  if (!date) {
+    return "";
+  }
+
+  const nextDate = new Date(date);
+
+  if (Number.isNaN(nextDate.getTime())) {
+    return "";
+  }
+
+  return nextDate.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+};
+
 const IconButton = ({ label, onClick, active = false, children }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
+    className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors ${
       active
         ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
         : "border-transparent text-[#9aa0a6] hover:border-[#5f6368] hover:bg-[#3c4043] hover:text-[#e8eaed]"
@@ -87,7 +127,8 @@ const NoteToolbarControls = ({
   onRestore,
   onDeleteForever,
   compact = false,
-  popoverPlacement = "bottom"
+  popoverPlacement = "bottom",
+  useViewportPopover = false
 }) => {
   const wrapperRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -205,24 +246,77 @@ const NoteToolbarControls = ({
   const applyReminderPreset = (preset) => {
     onPatchDraft({
       reminder: getReminderPreset(preset),
-      reminderRepeat: "once",
-      reminderWeekdays: []
+      reminderRepeat: REMINDER_REPEAT_VALUES.ONCE,
+      reminderWeekdays: [],
+      reminderPlace: ""
     });
-    setOpenPopover("");
+  };
+
+  const reminderMode = getReminderMode(draft.reminder, draft.reminderRepeat);
+
+  const handleReminderModeChange = (value) => {
+    if (value === REMINDER_MODE_VALUES.NONE) {
+      onPatchDraft({
+        reminder: null,
+        reminderRepeat: REMINDER_REPEAT_VALUES.ONCE,
+        reminderWeekdays: [],
+        reminderPlace: ""
+      });
+      return;
+    }
+
+      onPatchDraft({
+        reminderRepeat: value,
+        reminderPlace: "",
+        reminderWeekdays: value === REMINDER_REPEAT_VALUES.WEEKLY
+          ? (draft.reminderWeekdays?.length ? draft.reminderWeekdays : getDefaultReminderWeekdays(draft.reminder))
+          : []
+    });
+  };
+
+  const handleReminderDateChange = (value) => {
+    const nextReminder = toIsoOrNull(value);
+
+    onPatchDraft({
+      reminder: nextReminder,
+      reminderPlace: "",
+      reminderRepeat: nextReminder && reminderMode === REMINDER_MODE_VALUES.NONE
+        ? REMINDER_REPEAT_VALUES.ONCE
+        : draft.reminderRepeat || REMINDER_REPEAT_VALUES.ONCE,
+      reminderWeekdays:
+        nextReminder && reminderMode === REMINDER_REPEAT_VALUES.WEEKLY && (draft.reminderWeekdays || []).length === 0
+          ? getDefaultReminderWeekdays(nextReminder)
+          : (!nextReminder ? [] : draft.reminderWeekdays || [])
+    });
+  };
+
+  const handleToggleReminderWeekday = (weekdayValue) => {
+    onPatchDraft({
+      reminderRepeat: REMINDER_REPEAT_VALUES.WEEKLY,
+      reminderWeekdays: toggleReminderWeekday(draft.reminderWeekdays || [], weekdayValue)
+    });
   };
 
   const toolbarGapClass = compact ? "gap-1.5" : "gap-2";
   const openDownward = popoverPlacement !== "top";
   const mobilePopoverClass = "max-[479px]:fixed max-[479px]:left-3 max-[479px]:right-3 max-[479px]:top-auto max-[479px]:bottom-3 max-[479px]:z-[150] max-[479px]:mt-0 max-[479px]:mb-0 max-[479px]:max-h-[min(70vh,32rem)] max-[479px]:overflow-y-auto";
-  const leftPopoverClass = openDownward
-    ? `absolute left-0 top-full z-30 mt-2 ${mobilePopoverClass}`
-    : `absolute bottom-full left-0 z-30 mb-2 ${mobilePopoverClass}`;
-  const rightPopoverClass = openDownward
-    ? `absolute right-0 top-full z-30 mt-2 ${mobilePopoverClass}`
-    : `absolute bottom-full right-0 z-30 mb-2 ${mobilePopoverClass}`;
+  const desktopViewportPopoverClass = "min-[480px]:fixed min-[480px]:left-1/2 min-[480px]:right-auto min-[480px]:top-auto min-[480px]:bottom-24 min-[480px]:z-[170] min-[480px]:mt-0 min-[480px]:mb-0 min-[480px]:max-h-[calc(100vh-7rem)] min-[480px]:-translate-x-1/2 min-[480px]:overflow-y-auto";
+  const leftPopoverClass = useViewportPopover
+    ? `${desktopViewportPopoverClass} ${mobilePopoverClass}`
+    : openDownward
+      ? `absolute left-0 top-full z-[120] mt-2 ${mobilePopoverClass}`
+      : `absolute bottom-full left-0 z-[120] mb-2 ${mobilePopoverClass}`;
+  const rightPopoverClass = useViewportPopover
+    ? `${desktopViewportPopoverClass} ${mobilePopoverClass}`
+    : openDownward
+      ? `absolute right-0 top-full z-[120] mt-2 ${mobilePopoverClass}`
+      : `absolute bottom-full right-0 z-[120] mb-2 ${mobilePopoverClass}`;
 
   return (
-    <div ref={wrapperRef} className={`relative z-20 flex flex-wrap items-center gap-y-2 max-[479px]:w-full max-[479px]:justify-between ${toolbarGapClass}`}>
+    <div
+      ref={wrapperRef}
+      className={`relative ${openPopover ? "z-[140]" : "z-20"} flex flex-wrap items-center gap-y-2 max-[479px]:w-full max-[479px]:flex-nowrap max-[479px]:justify-start max-[479px]:overflow-x-auto max-[479px]:px-0.5 max-[479px]:pb-1 ${toolbarGapClass}`}
+    >
       <input
         ref={imageInputRef}
         type="file"
@@ -298,9 +392,51 @@ const NoteToolbarControls = ({
       )}
 
       {openPopover === "reminder" && (
-        <div className={`${leftPopoverClass} w-[min(20rem,calc(100vw-1.5rem))] rounded-[1.25rem] border border-[#5f6368] bg-[#202124] p-4 shadow-2xl`}>
+        <div className={`${leftPopoverClass} max-h-[min(78vh,40rem)] w-[min(20rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-[1.25rem] border border-[#5f6368] bg-[#202124] p-4 shadow-2xl`}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aa0a6]">Reminder</p>
-          <div className="mt-3 space-y-2">
+
+          {draft.reminder && (
+            <div className="mt-3 rounded-2xl border border-[#3c4043] bg-[#303134] px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9aa0a6]">Scheduled</p>
+              <p className="mt-1 text-sm font-medium text-[#e8eaed]">
+                {getReminderPreviewText(draft.reminder)}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {REMINDER_MODE_OPTIONS.map((option) => {
+              const isActive = reminderMode === option.value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleReminderModeChange(option.value)}
+                  className={`rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
+                      : "border-[#3c4043] text-[#e8eaed] hover:border-[#8ab4f8] hover:bg-[#303134]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9aa0a6]">Quick test</p>
+            <button type="button" onClick={() => applyReminderPreset("oneMinute")} className="w-full rounded-2xl border border-[#3c4043] px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:bg-[#303134]">
+              In 1 minute
+            </button>
+            <button type="button" onClick={() => applyReminderPreset("fiveMinutes")} className="w-full rounded-2xl border border-[#3c4043] px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:bg-[#303134]">
+              In 5 minutes
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9aa0a6]">Suggested times</p>
             <button type="button" onClick={() => applyReminderPreset("laterToday")} className="w-full rounded-2xl border border-[#3c4043] px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:bg-[#303134]">
               Later today
             </button>
@@ -318,37 +454,57 @@ const NoteToolbarControls = ({
               <input
                 type="datetime-local"
                 value={getDateTimeValue(draft.reminder)}
-                onChange={(event) => onPatchDraft({ reminder: toIsoOrNull(event.target.value) })}
+                min={getLocalMinReminder()}
+                onChange={(event) => handleReminderDateChange(event.target.value)}
                 className="w-full rounded-2xl border border-[#5f6368] bg-[#303134] px-3 py-2 text-sm text-[#e8eaed] outline-none transition-colors focus:border-[#8ab4f8]"
               />
             </label>
 
-            <label className="block">
-              <span className="mb-1.5 inline-flex items-center text-xs font-medium text-[#9aa0a6]">
-                <MapPin size={12} className="mr-1.5" />
-                Pick place
-              </span>
-              <input
-                type="text"
-                value={draft.reminderPlace || ""}
-                onChange={(event) => onPatchDraft({ reminderPlace: event.target.value })}
-                placeholder="Office, grocery store, home"
-                className="w-full rounded-2xl border border-[#5f6368] bg-[#303134] px-3 py-2 text-sm text-[#e8eaed] outline-none transition-colors focus:border-[#8ab4f8]"
-              />
-            </label>
+            {reminderMode === REMINDER_REPEAT_VALUES.WEEKLY && (
+              <div className="space-y-2">
+                <span className="block text-xs font-medium text-[#9aa0a6]">Custom days</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {WEEKDAY_OPTIONS.map((dayOption) => {
+                    const isActive = (draft.reminderWeekdays || []).includes(dayOption.value);
+
+                    return (
+                      <button
+                        key={dayOption.value}
+                        type="button"
+                        onClick={() => handleToggleReminderWeekday(dayOption.value)}
+                        className={`rounded-2xl border px-2 py-2 text-xs font-semibold transition-colors ${
+                          isActive
+                            ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
+                            : "border-[#3c4043] text-[#e8eaed] hover:border-[#8ab4f8] hover:bg-[#303134]"
+                        }`}
+                      >
+                        {dayOption.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-[#9aa0a6]">
+                  Custom reminders repeat on the selected weekdays.
+                </p>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-[#3c4043] bg-[#25262a] px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9aa0a6]">
+                Keep-style reminder
+              </p>
+              <p className="mt-1 text-xs leading-5 text-[#bdc1c6]">
+                Reminders are time-based with repeat options. Location reminders are not available in the new flow.
+              </p>
+            </div>
 
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  onPatchDraft({
-                    reminder: draft.reminder || null,
-                    reminderPlace: draft.reminderPlace || ""
-                  })
-                }
+                onClick={() => setOpenPopover("")}
                 className="inline-flex flex-1 items-center justify-center rounded-full bg-[#8ab4f8] px-4 py-2 text-sm font-semibold text-[#202124] transition-transform hover:scale-[1.01]"
               >
-                Apply
+                Done
               </button>
               <button
                 type="button"
@@ -356,7 +512,7 @@ const NoteToolbarControls = ({
                   onPatchDraft({
                     reminder: null,
                     reminderPlace: "",
-                    reminderRepeat: "once",
+                    reminderRepeat: REMINDER_REPEAT_VALUES.ONCE,
                     reminderWeekdays: []
                   });
                   setOpenPopover("");

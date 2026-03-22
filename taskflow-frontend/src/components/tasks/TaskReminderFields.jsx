@@ -1,7 +1,11 @@
 import React from "react";
 import { CalendarClock, Repeat2 } from "lucide-react";
 import {
-  REMINDER_REPEAT_OPTIONS,
+  getDefaultReminderWeekdays,
+  getQuickReminderLocalValue,
+  getReminderMode,
+  REMINDER_MODE_OPTIONS,
+  REMINDER_MODE_VALUES,
   REMINDER_REPEAT_VALUES,
   WEEKDAY_OPTIONS
 } from "./taskReminderUtils";
@@ -12,12 +16,56 @@ const TaskReminderFields = ({
   reminderRepeat,
   onReminderRepeatChange,
   reminderWeekdays,
+  onReminderWeekdaysChange,
   onToggleWeekday,
   min = "",
   disabled = false,
   compact = false
 }) => {
   const fieldSpacing = compact ? "space-y-2" : "space-y-3";
+  const reminderMode = getReminderMode(reminderValue, reminderRepeat);
+
+  const handleReminderChange = (value) => {
+    onReminderChange(value);
+
+    if (!value) {
+      onReminderRepeatChange(REMINDER_REPEAT_VALUES.ONCE);
+      onReminderWeekdaysChange?.([]);
+      return;
+    }
+
+    if (reminderMode === REMINDER_MODE_VALUES.NONE) {
+      onReminderRepeatChange(REMINDER_REPEAT_VALUES.ONCE);
+    }
+
+    if (reminderRepeat === REMINDER_REPEAT_VALUES.WEEKLY && reminderWeekdays.length === 0) {
+      onReminderWeekdaysChange?.(getDefaultReminderWeekdays(value));
+    }
+  };
+
+  const handleReminderModeChange = (value) => {
+    if (value === REMINDER_MODE_VALUES.NONE) {
+      onReminderChange("");
+      onReminderRepeatChange(REMINDER_REPEAT_VALUES.ONCE);
+      onReminderWeekdaysChange?.([]);
+      return;
+    }
+
+    onReminderRepeatChange(value);
+
+    if (value === REMINDER_REPEAT_VALUES.WEEKLY) {
+      if (reminderWeekdays.length === 0) {
+        onReminderWeekdaysChange?.(getDefaultReminderWeekdays(reminderValue || min));
+      }
+      return;
+    }
+
+    onReminderWeekdaysChange?.([]);
+  };
+
+  const applyQuickReminder = (minutesFromNow) => {
+    handleReminderChange(getQuickReminderLocalValue(minutesFromNow));
+  };
 
   return (
     <div className={fieldSpacing}>
@@ -32,7 +80,7 @@ const TaskReminderFields = ({
             value={reminderValue}
             min={min}
             disabled={disabled}
-            onChange={(event) => onReminderChange(event.target.value)}
+            onChange={(event) => handleReminderChange(event.target.value)}
             className="input-field py-3 text-sm"
           />
         </label>
@@ -43,12 +91,12 @@ const TaskReminderFields = ({
             Repeat
           </span>
           <select
-            value={reminderRepeat}
+            value={reminderMode}
             disabled={disabled}
-            onChange={(event) => onReminderRepeatChange(event.target.value)}
+            onChange={(event) => handleReminderModeChange(event.target.value)}
             className="input-field py-3 text-sm"
           >
-            {REMINDER_REPEAT_OPTIONS.map((option) => (
+            {REMINDER_MODE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -57,7 +105,34 @@ const TaskReminderFields = ({
         </label>
       </div>
 
-      {reminderRepeat === REMINDER_REPEAT_VALUES.WEEKLY && (
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => applyQuickReminder(1)}
+          className={`rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+            disabled
+              ? "border-surface-200 bg-white text-surface-400 opacity-60"
+              : "border-surface-200 bg-white text-surface-600 hover:border-primary-200 hover:text-primary-600"
+          }`}
+        >
+          In 1 minute
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => applyQuickReminder(5)}
+          className={`rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+            disabled
+              ? "border-surface-200 bg-white text-surface-400 opacity-60"
+              : "border-surface-200 bg-white text-surface-600 hover:border-primary-200 hover:text-primary-600"
+          }`}
+        >
+          In 5 minutes
+        </button>
+      </div>
+
+      {reminderMode === REMINDER_REPEAT_VALUES.WEEKLY && (
         <div className="space-y-2">
           <p className="ml-1 text-[11px] font-black uppercase tracking-[0.2em] text-surface-500">
             Days

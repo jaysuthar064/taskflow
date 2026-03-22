@@ -208,7 +208,7 @@ const NoteEditorModal = ({
       />
 
       <div
-        className="relative flex max-h-[calc(100vh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[1.5rem] border shadow-[0_8px_24px_rgba(0,0,0,0.55)] sm:max-h-[92vh] sm:rounded-[1.75rem]"
+        className="relative isolate flex max-h-[calc(100vh-1rem)] w-full max-w-3xl flex-col overflow-visible rounded-[1.5rem] border shadow-[0_8px_24px_rgba(0,0,0,0.55)] sm:max-h-[92vh] sm:rounded-[1.75rem]"
         style={visuals.cardStyle}
       >
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-6">
@@ -244,7 +244,7 @@ const NoteEditorModal = ({
           </div>
         </div>
 
-        <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+        <div className="relative z-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           <div className="space-y-5">
             <input
               type="text"
@@ -376,7 +376,7 @@ const NoteEditorModal = ({
           </div>
         </div>
 
-        <div className="relative z-20 border-t border-white/10 px-4 py-3 sm:px-6">
+        <div className="relative z-[60] border-t border-white/10 px-4 py-3 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <NoteToolbarControls
               draft={draft}
@@ -388,6 +388,7 @@ const NoteEditorModal = ({
               onRestore={note.trashedAt ? handleRestore : null}
               onDeleteForever={note.trashedAt ? onDeleteForever : null}
               popoverPlacement="top"
+              useViewportPopover
             />
 
             <div className="text-xs text-[#9aa0a6]">

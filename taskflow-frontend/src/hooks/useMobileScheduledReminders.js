@@ -1,7 +1,52 @@
 import { useEffect } from "react";
 import { registerPushServiceWorker } from "../utils/pushNotifications";
+import { REMINDER_REPEAT_VALUES } from "../components/tasks/taskReminderUtils";
 
 const REMINDER_TAG_PREFIX = "task-reminder-";
+const OVERDUE_REMINDER_DELAY_MS = 24 * 60 * 60 * 1000;
+
+const truncateReminderText = (value, maxLength = 72) => {
+    const text = String(value || "").trim().replace(/\s+/g, " ");
+
+    if (!text) {
+        return "";
+    }
+
+    return text.length > maxLength ? `${text.slice(0, maxLength - 1).trimEnd()}...` : text;
+};
+
+const getReminderLabel = (task) => {
+    const title = truncateReminderText(task?.title, 72);
+
+    if (title) {
+        return title;
+    }
+
+    const checklistLabel = truncateReminderText(
+        (task?.checklistItems || []).find((item) => item?.text?.trim())?.text,
+        72
+    );
+
+    if (checklistLabel) {
+        return checklistLabel;
+    }
+
+    const descriptionLabel = truncateReminderText(task?.description, 72);
+
+    if (descriptionLabel) {
+        return descriptionLabel;
+    }
+
+    if (task?.noteType === "image") {
+        return "Image task";
+    }
+
+    if (task?.noteType === "drawing") {
+        return "Sketch task";
+    }
+
+    return "Untitled task";
+};
 
 const isAndroidBrowser = () => {
     if (typeof navigator === "undefined") {
@@ -21,7 +66,7 @@ const supportsNotificationTriggers = () => {
     );
 };
 
-const buildReminderTag = (taskId) => `${REMINDER_TAG_PREFIX}${taskId}`;
+const buildReminderTag = (taskId, suffix = "due") => `${REMINDER_TAG_PREFIX}${taskId}-${suffix}`;
 
 export const useMobileScheduledReminders = ({ tasks = [], enabled = false }) => {
     useEffect(() => {
@@ -53,15 +98,32 @@ export const useMobileScheduledReminders = ({ tasks = [], enabled = false }) => 
 
                     const reminderTime = new Date(task.reminder).getTime();
 
-                    if (Number.isNaN(reminderTime) || reminderTime <= now) {
+                    if (Number.isNaN(reminderTime)) {
                         return;
                     }
 
-                    nextReminders.set(buildReminderTag(task._id), {
-                        title: `TaskFlow Reminder: ${task.title || "Untitled task"}`,
-                        body: task.description || task.checklistItems?.[0]?.text || "A task reminder is due now.",
-                        reminderTime
-                    });
+                    const reminderLabel = getReminderLabel(task);
+                    const reminderBody = task.description || task.checklistItems?.[0]?.text || "A task reminder is due now.";
+
+                    if (reminderTime > now) {
+                        nextReminders.set(buildReminderTag(task._id), {
+                            title: `TaskFlow Reminder: ${reminderLabel}`,
+                            body: reminderBody,
+                            reminderTime
+                        });
+                    }
+
+                    if ((task.reminderRepeat || REMINDER_REPEAT_VALUES.ONCE) === REMINDER_REPEAT_VALUES.ONCE) {
+                        const followupTime = reminderTime + OVERDUE_REMINDER_DELAY_MS;
+
+                        if (followupTime > now) {
+                            nextReminders.set(buildReminderTag(task._id, "followup"), {
+                                title: `TaskFlow Reminder: ${reminderLabel}`,
+                                body: `Still pending: ${reminderLabel}.`,
+                                reminderTime: followupTime
+                            });
+                        }
+                    }
                 });
 
                 const existingNotifications = await registration.getNotifications({

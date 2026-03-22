@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Archive,
   Bell,
   ImageIcon,
+  MoreVertical,
   Pin,
   Undo2,
   Trash2
@@ -50,6 +51,8 @@ const NoteCard = ({
   onArchive,
   onTrash
 }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
   const visuals = getNoteVisuals(note);
   const checklistItems = normalizeChecklistItemsForDraft(note.checklistItems || []);
   const previewItems = checklistItems.slice(0, 4);
@@ -57,11 +60,31 @@ const NoteCard = ({
   const cardLayoutClass = viewMode === "list" ? "flex-col gap-4 min-[640px]:flex-row min-[640px]:gap-5" : "flex-col";
   const canToggleChecklistItems = note.noteType === "checklist" && typeof onToggleChecklistItem === "function";
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <article
-      className={`group relative flex w-full max-w-full break-inside-avoid cursor-pointer rounded-[1.25rem] border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(0,0,0,0.4)] max-[419px]:mx-auto max-[419px]:max-w-[22rem] max-[359px]:rounded-[1rem] min-[360px]:p-4 ${
+      className={`group relative isolate flex w-full max-w-full break-inside-avoid cursor-pointer rounded-[1.25rem] border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition-shadow duration-200 hover:z-30 hover:shadow-[0_4px_10px_rgba(0,0,0,0.42)] focus-within:z-30 max-[419px]:mx-auto max-[419px]:max-w-[22rem] max-[359px]:rounded-[1rem] min-[360px]:p-4 ${
         isSelected ? "ring-2 ring-[#8ab4f8]" : ""
-      } ${cardLayoutClass}`}
+      } ${isMobileMenuOpen ? "z-[90]" : isSelected ? "z-30" : "z-0"} ${cardLayoutClass}`}
       style={visuals.cardStyle}
       onClick={() => {
         onSelect?.(note._id);
@@ -74,15 +97,76 @@ const NoteCard = ({
           event.stopPropagation();
           onTogglePin(note);
         }}
-        className={`absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
+        className={`absolute right-3 top-3 hidden h-8 w-8 items-center justify-center rounded-full border transition-colors min-[600px]:inline-flex ${
           note.pinned
             ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
-            : "border-transparent bg-[#202124]/20 text-[#9aa0a6] opacity-100 hover:border-[#5f6368] hover:text-[#e8eaed] min-[600px]:opacity-0 min-[600px]:group-hover:opacity-100"
+            : "border-transparent bg-[#202124]/20 text-[#9aa0a6] min-[600px]:opacity-0 min-[600px]:group-hover:opacity-100 hover:border-[#5f6368] hover:text-[#e8eaed]"
         }`}
         title={note.pinned ? "Unpin task" : "Pin task"}
       >
         <Pin size={15} />
       </button>
+
+      <div ref={mobileMenuRef} className="absolute right-3 top-3 z-20 min-[600px]:hidden">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setIsMobileMenuOpen((current) => !current);
+          }}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-[#202124]/20 text-[#9aa0a6] transition-colors hover:border-[#5f6368] hover:text-[#e8eaed]"
+          title="More options"
+          aria-label="More options"
+          aria-expanded={isMobileMenuOpen}
+        >
+          <MoreVertical size={15} />
+        </button>
+
+        {isMobileMenuOpen && (
+          <div className="absolute right-0 top-10 w-44 rounded-[1rem] border border-[#5f6368] bg-[#202124] p-1.5 shadow-2xl">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onTogglePin(note);
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:bg-[#303134]"
+            >
+              <Pin size={15} className="mr-3 text-[#9aa0a6]" />
+              {note.pinned ? "Unpin task" : "Pin task"}
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onArchive(note);
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:bg-[#303134]"
+            >
+              {note.trashedAt ? (
+                <Undo2 size={15} className="mr-3 text-[#9aa0a6]" />
+              ) : (
+                <Archive size={15} className="mr-3 text-[#9aa0a6]" />
+              )}
+              {note.trashedAt ? "Restore task" : note.archived ? "Unarchive task" : "Archive task"}
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onTrash(note);
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#f28b82] transition-colors hover:bg-[#3c2c2c]"
+            >
+              <Trash2 size={15} className="mr-3" />
+              {note.trashedAt ? "Delete forever" : "Delete task"}
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="min-w-0 flex-1 space-y-3 pr-9 min-[360px]:pr-10">
         <div className="space-y-2">
@@ -175,7 +259,7 @@ const NoteCard = ({
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-1.5 opacity-100 transition-opacity duration-200 min-[360px]:gap-2 min-[600px]:opacity-0 min-[600px]:group-hover:opacity-100">
+      <div className="mt-4 hidden flex-wrap items-center justify-between gap-1.5 transition-opacity duration-200 min-[360px]:gap-2 min-[600px]:flex min-[600px]:opacity-0 min-[600px]:group-hover:opacity-100">
         <div className="flex min-w-0 items-center gap-1.5 text-[#9aa0a6]">
           {note.noteType === "image" && <ImageIcon size={14} />}
           {note.noteType === "checklist" && (

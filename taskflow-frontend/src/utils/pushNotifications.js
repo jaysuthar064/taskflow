@@ -9,6 +9,18 @@ export const isPushSupported = () => {
 
 const TASKFLOW_CACHE_PREFIXES = ["taskflow-static-", "taskflow-runtime-"];
 
+const canRegisterServiceWorker = () => {
+    if (typeof window === "undefined") {
+        return false;
+    }
+
+    if (import.meta.env.PROD) {
+        return true;
+    }
+
+    return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+};
+
 const urlBase64ToUint8Array = (base64String) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -23,7 +35,7 @@ const urlBase64ToUint8Array = (base64String) => {
 };
 
 export const registerPushServiceWorker = async () => {
-    if (!isPushSupported() || !import.meta.env.PROD) {
+    if (!isPushSupported() || !canRegisterServiceWorker()) {
         return null;
     }
 

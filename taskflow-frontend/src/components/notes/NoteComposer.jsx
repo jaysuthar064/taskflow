@@ -192,7 +192,12 @@ const NoteComposer = ({
   };
 
   return (
-    <div ref={wrapperRef} className="mx-auto w-full max-w-3xl">
+    <div
+      ref={wrapperRef}
+      className={`relative mx-auto w-full max-w-3xl max-[479px]:px-1 ${
+        expanded ? "z-[110]" : "z-0"
+      }`}
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -202,7 +207,7 @@ const NoteComposer = ({
       />
 
       <div
-        className={`rounded-[1.75rem] border border-[#5f6368] bg-[#303134] px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition-all duration-200 min-[360px]:px-4 ${
+        className={`relative isolate overflow-visible rounded-[1.5rem] border border-[#5f6368] bg-[#303134] px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition-all duration-200 min-[360px]:rounded-[1.75rem] min-[360px]:px-4 ${
           expanded ? "shadow-[0_8px_24px_rgba(0,0,0,0.45)]" : "hover:shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
         }`}
       >
@@ -287,7 +292,7 @@ const NoteComposer = ({
               </p>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-[#3c4043] pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-[#3c4043] pt-4 sm:flex-row sm:items-center sm:justify-between">
               <NoteToolbarControls
                 draft={draft}
                 onPatchDraft={patchDraft}

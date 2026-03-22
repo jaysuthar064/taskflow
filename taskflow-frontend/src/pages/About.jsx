@@ -4,12 +4,47 @@ import { ArrowLeft, Rocket, Users, Target } from "lucide-react";
 import Seo from "../components/common/Seo";
 
 const About = () => {
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const toSchemaUrl = (path) => siteUrl ? `${siteUrl}${path}` : path;
+  const aboutSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: "About TaskFlow",
+    url: toSchemaUrl("/about"),
+    description: "Learn how TaskFlow helps people organize tasks, notes, and reminders with a cleaner daily workflow."
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: toSchemaUrl("/")
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "About",
+        item: toSchemaUrl("/about")
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-surface-50 p-4 sm:p-6 md:p-12">
       <Seo
         title="About TaskFlow | Task Management and Reminder App"
         description="Learn how TaskFlow helps people organize tasks, notes, and reminders with a cleaner daily workflow."
         path="/about"
+        keywords={[
+          "about taskflow",
+          "task management app",
+          "notes reminder platform",
+          "productivity workspace"
+        ]}
+        schema={[aboutSchema, breadcrumbSchema]}
       />
       <div className="max-w-4xl mx-auto space-y-12 sm:space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="space-y-6">

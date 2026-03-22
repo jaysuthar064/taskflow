@@ -13,19 +13,51 @@ import {
 } from "lucide-react";
 
 const Landing = () => {
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const toSchemaUrl = (path) => siteUrl ? `${siteUrl}${path}` : path;
+
   const landingSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: "TaskFlow",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
-    url: "/",
+    url: toSchemaUrl("/"),
     description: "TaskFlow helps you organize tasks, reminders, notes, and daily work in one clean workspace.",
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD"
     }
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "TaskFlow",
+    url: toSchemaUrl("/"),
+    description: "TaskFlow helps you organize tasks, reminders, notes, and daily work in one clean workspace."
+  };
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "TaskFlow",
+    url: toSchemaUrl("/"),
+    logo: toSchemaUrl("/icon-512.png")
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: toSchemaUrl("/")
+      }
+    ]
   };
 
   const fadeInUp = {
@@ -47,7 +79,14 @@ const Landing = () => {
         title="TaskFlow | Task Management, Notes, and Reminders"
         description="Organize tasks, notes, and reminders with interactive cards built for daily planning and focused team work."
         path="/"
-        schema={landingSchema}
+        keywords={[
+          "task management",
+          "notes app",
+          "reminder app",
+          "checklist organizer",
+          "daily planning app"
+        ]}
+        schema={[landingSchema, websiteSchema, organizationSchema, breadcrumbSchema]}
       />
       {/* Decorative Background Elements - Hidden on mobile for performance */}
       <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">

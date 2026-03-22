@@ -4,10 +4,24 @@ export const REMINDER_REPEAT_VALUES = Object.freeze({
   WEEKLY: "weekly"
 });
 
+export const REMINDER_MODE_VALUES = Object.freeze({
+  NONE: "none",
+  ONCE: REMINDER_REPEAT_VALUES.ONCE,
+  DAILY: REMINDER_REPEAT_VALUES.DAILY,
+  CUSTOM: REMINDER_REPEAT_VALUES.WEEKLY
+});
+
+export const REMINDER_MODE_OPTIONS = [
+  { value: REMINDER_MODE_VALUES.NONE, label: "None" },
+  { value: REMINDER_MODE_VALUES.ONCE, label: "Once" },
+  { value: REMINDER_MODE_VALUES.DAILY, label: "Every day" },
+  { value: REMINDER_MODE_VALUES.CUSTOM, label: "Custom" }
+];
+
 export const REMINDER_REPEAT_OPTIONS = [
-  { value: REMINDER_REPEAT_VALUES.ONCE, label: "Does not repeat" },
+  { value: REMINDER_REPEAT_VALUES.ONCE, label: "Once" },
   { value: REMINDER_REPEAT_VALUES.DAILY, label: "Every day" },
-  { value: REMINDER_REPEAT_VALUES.WEEKLY, label: "Selected days" }
+  { value: REMINDER_REPEAT_VALUES.WEEKLY, label: "Custom" }
 ];
 
 export const WEEKDAY_OPTIONS = [
@@ -24,6 +38,15 @@ export const getLocalMinReminder = () => {
   const nextMinute = new Date(Date.now() + 60 * 1000);
   nextMinute.setSeconds(0, 0);
   return nextMinute.toISOString().slice(0, 16);
+};
+
+export const getQuickReminderLocalValue = (minutesFromNow = 1) => {
+  const nextReminder = new Date(Date.now() + Math.max(1, minutesFromNow) * 60 * 1000);
+  nextReminder.setSeconds(0, 0);
+
+  const offset = nextReminder.getTimezoneOffset();
+  const localDate = new Date(nextReminder.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16);
 };
 
 export const toDateTimeLocalValue = (value) => {
@@ -59,6 +82,18 @@ export const normalizeReminderRepeat = (value) => {
   return REMINDER_REPEAT_VALUES.ONCE;
 };
 
+export const getReminderMode = (reminderValue, reminderRepeat) => {
+  const normalizedRepeat = normalizeReminderRepeat(reminderRepeat);
+
+  if (!toIsoOrNull(reminderValue)) {
+    return normalizedRepeat === REMINDER_REPEAT_VALUES.ONCE
+      ? REMINDER_MODE_VALUES.NONE
+      : normalizedRepeat;
+  }
+
+  return normalizedRepeat;
+};
+
 export const normalizeReminderWeekdays = (value) => {
   if (!Array.isArray(value)) {
     return [];
@@ -76,6 +111,17 @@ export const toggleReminderWeekday = (currentWeekdays, weekdayValue) => {
   }
 
   return normalizeReminderWeekdays([...normalizedWeekdays, weekdayValue]);
+};
+
+export const getDefaultReminderWeekdays = (reminderValue) => {
+  const normalizedReminder = toIsoOrNull(reminderValue);
+  const sourceDate = normalizedReminder ? new Date(normalizedReminder) : new Date();
+
+  if (Number.isNaN(sourceDate.getTime())) {
+    return [];
+  }
+
+  return [sourceDate.getDay()];
 };
 
 export const getTaskReminderDraft = (task = {}) => ({

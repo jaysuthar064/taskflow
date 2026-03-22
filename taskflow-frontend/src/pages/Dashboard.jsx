@@ -534,9 +534,9 @@ const Dashboard = () => {
     }
 
     return (
-      <div className="columns-1 gap-4 min-[480px]:columns-2 min-[900px]:columns-3 min-[1200px]:columns-4">
+      <div className="relative isolate grid grid-cols-1 items-start gap-5 overflow-visible px-0.5 min-[480px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1200px]:grid-cols-4">
         {noteCollection.map((note) => (
-          <div key={note._id} className="mb-4 break-inside-avoid">
+          <div key={note._id} className="relative isolate h-fit min-w-0 hover:z-30 focus-within:z-30">
             <NoteCard
               note={note}
               viewMode="grid"
