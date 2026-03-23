@@ -299,6 +299,7 @@ const NoteComposer = ({
                 availableLabels={availableLabels}
                 onEnsureLabel={onEnsureLabel}
                 compact
+                useViewportPopover
               />
 
               <button

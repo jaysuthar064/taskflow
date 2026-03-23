@@ -300,7 +300,9 @@ const NoteToolbarControls = ({
   const toolbarGapClass = compact ? "gap-1.5" : "gap-2";
   const openDownward = popoverPlacement !== "top";
   const mobilePopoverClass = "max-[479px]:fixed max-[479px]:left-3 max-[479px]:right-3 max-[479px]:top-auto max-[479px]:bottom-3 max-[479px]:z-[150] max-[479px]:mt-0 max-[479px]:mb-0 max-[479px]:max-h-[min(70vh,32rem)] max-[479px]:overflow-y-auto";
-  const desktopViewportPopoverClass = "min-[480px]:fixed min-[480px]:left-1/2 min-[480px]:right-auto min-[480px]:top-auto min-[480px]:bottom-24 min-[480px]:z-[170] min-[480px]:mt-0 min-[480px]:mb-0 min-[480px]:max-h-[calc(100vh-7rem)] min-[480px]:-translate-x-1/2 min-[480px]:overflow-y-auto";
+  const desktopViewportPopoverClass = openDownward
+    ? "min-[480px]:fixed min-[480px]:left-1/2 min-[480px]:right-auto min-[480px]:top-[5.75rem] min-[480px]:bottom-auto min-[480px]:z-[170] min-[480px]:mt-0 min-[480px]:mb-0 min-[480px]:max-h-[calc(100vh-7rem)] min-[480px]:-translate-x-1/2 min-[480px]:overflow-y-auto"
+    : "min-[480px]:fixed min-[480px]:left-1/2 min-[480px]:right-auto min-[480px]:top-auto min-[480px]:bottom-24 min-[480px]:z-[170] min-[480px]:mt-0 min-[480px]:mb-0 min-[480px]:max-h-[calc(100vh-7rem)] min-[480px]:-translate-x-1/2 min-[480px]:overflow-y-auto";
   const leftPopoverClass = useViewportPopover
     ? `${desktopViewportPopoverClass} ${mobilePopoverClass}`
     : openDownward
