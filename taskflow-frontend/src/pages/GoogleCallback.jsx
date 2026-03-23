@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth-context";
-import { savePendingTwoFactorChallenge } from "../utils/twoFactorChallenge";
+import { clearPendingTwoFactorChallenge } from "../utils/twoFactorChallenge";
 import Seo from "../components/common/Seo";
 
 const GoogleCallback = () => {
@@ -12,33 +12,19 @@ const GoogleCallback = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
-    const challengeToken = params.get("challengeToken");
     const userDataStr = params.get("user");
 
-    if (!userDataStr) {
+    clearPendingTwoFactorChallenge();
+
+    if (!token || !userDataStr) {
       navigate("/login?error=no_token", { replace: true });
       return;
     }
 
     try {
       const user = JSON.parse(decodeURIComponent(userDataStr));
-
-      if (token) {
-        login(token, user);
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-
-      if (challengeToken) {
-        savePendingTwoFactorChallenge({
-          challengeToken,
-          user
-        });
-        navigate("/login?twoFactor=required", { replace: true });
-        return;
-      }
-
-      navigate("/login?error=no_token", { replace: true });
+      login(token, user);
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("Error completing Google authentication:", error);
       navigate("/login?error=auth_failed", { replace: true });

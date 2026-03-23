@@ -1,11 +1,7 @@
 import User from "../models/User.js";
 import Task from "../models/taskModel.js";
 import Notification from "../models/Notification.js";
-import {
-    createAuthenticatedSession,
-    createTwoFactorChallengeToken,
-    getTwoFactorChallengeLifetimeSeconds
-} from "../utils/authTokens.js";
+import { createAuthenticatedSession } from "../utils/authTokens.js";
 import { serializeUser } from "../utils/userResponse.js";
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -97,25 +93,11 @@ export const loginUser = async (req, res) => {
             await user.save();
         }
 
-        if (user.twoFactorEnabled) {
-            const challengeToken = createTwoFactorChallengeToken({
-                userId: user._id.toString(),
-                loginMethod: "password"
-            });
-
-            return res.status(200).json({
-                message: "Two-factor authentication is required.",
-                requiresTwoFactor: true,
-                challengeToken,
-                challengeLifetimeSeconds: getTwoFactorChallengeLifetimeSeconds(),
-                user: serializeUser(user)
-            });
-        }
-
         const { token } = await createAuthenticatedSession({
             user,
             req,
-            loginMethod: "password"
+            loginMethod: "password",
+            twoFactorVerified: Boolean(user.twoFactorEnabled)
         });
 
         res.status(200).json({
@@ -140,20 +122,11 @@ export const googleAuthCallback = async (req, res) => {
         // Redirect to frontend with token and user data
         const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
 
-        if (user.twoFactorEnabled) {
-            const challengeToken = createTwoFactorChallengeToken({
-                userId: user._id.toString(),
-                loginMethod: "google"
-            });
-            const redirectUrl = `${frontendUrl}/auth/callback?challengeToken=${challengeToken}&user=${encodeURIComponent(userData)}`;
-
-            return res.redirect(redirectUrl);
-        }
-
         const { token } = await createAuthenticatedSession({
             user,
             req,
-            loginMethod: "google"
+            loginMethod: "google",
+            twoFactorVerified: Boolean(user.twoFactorEnabled)
         });
         const redirectUrl = `${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(userData)}`;
 

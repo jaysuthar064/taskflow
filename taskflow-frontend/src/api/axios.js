@@ -48,8 +48,7 @@ API.interceptors.response.use(
       const requestUrl = error.config?.url || "";
       const authExemptRoutes = [
         "/login",
-        "/register",
-        "/two-factor/verify"
+        "/register"
       ];
       const isAuthExempt = authExemptRoutes.some((route) => requestUrl.includes(route));
 
