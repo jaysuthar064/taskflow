@@ -21,10 +21,12 @@ const limiter = rateLimit({
 app.use(limiter); 
 
 // Request Logger
-app.use((req, res, next) => {
-    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.originalUrl}`);
-    next();
-});
+if (process.env.NODE_ENV !== "production") {
+    app.use((req, res, next) => {
+        console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.originalUrl}`);
+        next();
+    });
+}
 
 //Body Parser
 app.use(express.json({ limit: "5mb" }));

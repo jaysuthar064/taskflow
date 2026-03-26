@@ -82,7 +82,7 @@ const NoteCard = ({
 
   return (
     <article
-      className={`group relative isolate flex w-full max-w-full break-inside-avoid cursor-pointer rounded-[1.25rem] border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition-shadow duration-200 hover:z-30 hover:shadow-[0_4px_10px_rgba(0,0,0,0.42)] focus-within:z-30 max-[419px]:mx-auto max-[419px]:max-w-[22rem] max-[359px]:rounded-[1rem] min-[360px]:p-4 ${
+      className={`smooth-motion group relative isolate flex w-full max-w-full break-inside-avoid cursor-pointer rounded-[1.25rem] border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:z-30 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.26)] focus-within:z-30 max-[419px]:mx-auto max-[419px]:max-w-[22rem] max-[359px]:rounded-[1rem] min-[360px]:p-4 ${
         isSelected ? "ring-2 ring-[#8ab4f8]" : ""
       } ${isMobileMenuOpen ? "z-[90]" : isSelected ? "z-30" : "z-0"} ${cardLayoutClass}`}
       style={visuals.cardStyle}
@@ -97,7 +97,7 @@ const NoteCard = ({
           event.stopPropagation();
           onTogglePin(note);
         }}
-        className={`absolute right-3 top-3 hidden h-8 w-8 items-center justify-center rounded-full border transition-colors min-[600px]:inline-flex ${
+        className={`smooth-motion smooth-lift absolute right-3 top-3 hidden h-8 w-8 items-center justify-center rounded-full border min-[600px]:inline-flex ${
           note.pinned
             ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
             : "border-transparent bg-[#202124]/20 text-[#9aa0a6] min-[600px]:opacity-0 min-[600px]:group-hover:opacity-100 hover:border-[#5f6368] hover:text-[#e8eaed]"
@@ -114,7 +114,7 @@ const NoteCard = ({
             event.stopPropagation();
             setIsMobileMenuOpen((current) => !current);
           }}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-[#202124]/20 text-[#9aa0a6] transition-colors hover:border-[#5f6368] hover:text-[#e8eaed]"
+          className="smooth-motion smooth-lift inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-[#202124]/20 text-[#9aa0a6] hover:border-[#5f6368] hover:text-[#e8eaed]"
           title="More options"
           aria-label="More options"
           aria-expanded={isMobileMenuOpen}
@@ -123,7 +123,7 @@ const NoteCard = ({
         </button>
 
         {isMobileMenuOpen && (
-          <div className="absolute right-0 top-10 w-44 rounded-[1rem] border border-[#5f6368] bg-[#202124] p-1.5 shadow-2xl">
+          <div className="smooth-panel absolute right-0 top-10 w-44 rounded-[1rem] border border-[#5f6368] bg-[#202124] p-1.5 shadow-2xl">
             <button
               type="button"
               onClick={(event) => {
@@ -131,7 +131,7 @@ const NoteCard = ({
                 onTogglePin(note);
                 setIsMobileMenuOpen(false);
               }}
-              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:bg-[#303134]"
+              className="smooth-motion flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#e8eaed] hover:translate-x-0.5 hover:bg-[#303134]"
             >
               <Pin size={15} className="mr-3 text-[#9aa0a6]" />
               {note.pinned ? "Unpin task" : "Pin task"}
@@ -143,7 +143,7 @@ const NoteCard = ({
                 onArchive(note);
                 setIsMobileMenuOpen(false);
               }}
-              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#e8eaed] transition-colors hover:bg-[#303134]"
+              className="smooth-motion flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#e8eaed] hover:translate-x-0.5 hover:bg-[#303134]"
             >
               {note.trashedAt ? (
                 <Undo2 size={15} className="mr-3 text-[#9aa0a6]" />
@@ -159,7 +159,7 @@ const NoteCard = ({
                 onTrash(note);
                 setIsMobileMenuOpen(false);
               }}
-              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#f28b82] transition-colors hover:bg-[#3c2c2c]"
+              className="smooth-motion flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-[#f28b82] hover:translate-x-0.5 hover:bg-[#3c2c2c]"
             >
               <Trash2 size={15} className="mr-3" />
               {note.trashedAt ? "Delete forever" : "Delete task"}
@@ -179,7 +179,7 @@ const NoteCard = ({
               <img
                 src={note.imageData}
                 alt={getNoteTitle(note)}
-                className="max-h-56 w-full object-cover"
+                className="smooth-motion max-h-56 w-full object-cover group-hover:scale-[1.02]"
               />
             </div>
           )}
@@ -189,7 +189,7 @@ const NoteCard = ({
               <img
                 src={note.imageData}
                 alt="Task sketch"
-                className="max-h-56 w-full object-cover"
+                className="smooth-motion max-h-56 w-full object-cover group-hover:scale-[1.02]"
               />
             </div>
           )}
@@ -205,7 +205,7 @@ const NoteCard = ({
                       onToggleChecklistItem?.(note, item.itemId);
                     }}
                     disabled={!canToggleChecklistItems}
-                    className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    className={`smooth-motion mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                       item.checked
                         ? "border-[#8ab4f8] bg-[#8ab4f8] text-[#202124]"
                         : "border-[#9aa0a6] text-[#9aa0a6] hover:border-[#8ab4f8] hover:text-[#8ab4f8]"
@@ -276,7 +276,7 @@ const NoteCard = ({
               event.stopPropagation();
               onArchive(note);
             }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#202124]/35 hover:text-[#e8eaed]"
+            className="smooth-motion smooth-lift inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] hover:bg-[#202124]/35 hover:text-[#e8eaed]"
             title={note.trashedAt ? "Restore task" : note.archived ? "Unarchive task" : "Archive task"}
           >
             {note.trashedAt ? <Undo2 size={15} /> : <Archive size={15} />}
@@ -287,7 +287,7 @@ const NoteCard = ({
               event.stopPropagation();
               onTrash(note);
             }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#202124]/35 hover:text-[#f28b82]"
+            className="smooth-motion smooth-lift inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] hover:bg-[#202124]/35 hover:text-[#f28b82]"
             title={note.trashedAt ? "Delete forever" : "Delete task"}
           >
             <Trash2 size={15} />

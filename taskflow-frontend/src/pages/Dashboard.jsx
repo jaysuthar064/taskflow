@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Archive, Bell, Plus, StickyNote, Trash2 } from "lucide-react";
 import API from "../api/axios";
 import Navbar from "../components/Navbar";
@@ -27,11 +27,77 @@ import { useMobileScheduledReminders } from "../hooks/useMobileScheduledReminder
 import { usePushNotifications } from "../hooks/usePushNotifications";
 
 const EMPTY_FILTERS = createSearchFilters();
+const NOTES_CACHE_VERSION = 1;
+const NOTES_CACHE_STORAGE_LIMIT = 900_000;
+const dashboardNotesCache = new Map();
 
 const getApiMessage = (error, fallback) => error.response?.data?.message || fallback;
 
+const getNotesCacheKey = (userId) => `taskflow:notes-cache:v${NOTES_CACHE_VERSION}:${userId}`;
+
+const readCachedNotes = (userId) => {
+  if (!userId) {
+    return [];
+  }
+
+  const cachedNotes = dashboardNotesCache.get(userId);
+
+  if (Array.isArray(cachedNotes)) {
+    return cachedNotes;
+  }
+
+  if (typeof sessionStorage === "undefined") {
+    return [];
+  }
+
+  try {
+    const rawCache = sessionStorage.getItem(getNotesCacheKey(userId));
+
+    if (!rawCache) {
+      return [];
+    }
+
+    const parsedCache = JSON.parse(rawCache);
+    const nextNotes = Array.isArray(parsedCache?.notes) ? parsedCache.notes : [];
+    dashboardNotesCache.set(userId, nextNotes);
+    return nextNotes;
+  } catch (error) {
+    console.error("Unable to read cached notes", error);
+    return [];
+  }
+};
+
+const writeCachedNotes = (userId, notes) => {
+  if (!userId || !Array.isArray(notes)) {
+    return;
+  }
+
+  dashboardNotesCache.set(userId, notes);
+
+  if (typeof sessionStorage === "undefined") {
+    return;
+  }
+
+  try {
+    const payload = JSON.stringify({
+      notes,
+      updatedAt: Date.now()
+    });
+
+    if (payload.length > NOTES_CACHE_STORAGE_LIMIT) {
+      sessionStorage.removeItem(getNotesCacheKey(userId));
+      return;
+    }
+
+    sessionStorage.setItem(getNotesCacheKey(userId), payload);
+  } catch (error) {
+    console.error("Unable to cache notes", error);
+  }
+};
+
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
+  const initialCachedNotesRef = useRef(readCachedNotes(user?._id));
   const installSettings = useAppInstallPrompt();
   const notificationSettings = usePushNotifications();
   const searchInputRef = useRef(null);
@@ -42,8 +108,9 @@ const Dashboard = () => {
     handleTrashNote: async () => {},
     handleUndoSnackbar: async () => {}
   });
-  const [notes, setNotes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [notes, setNotes] = useState(() => initialCachedNotesRef.current);
+  const [isLoading, setIsLoading] = useState(() => initialCachedNotesRef.current.length === 0);
+  const [isRefreshing, setIsRefreshing] = useState(() => initialCachedNotesRef.current.length > 0);
   const [activeSection, setActiveSection] = useState("notes");
   const [selectedLabel, setSelectedLabel] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,26 +145,75 @@ const Dashboard = () => {
     }
   }, [viewMode]);
 
-  const loadNotes = async ({ withLoader = false } = {}) => {
+  const loadNotes = useCallback(async ({ withLoader = false, signal } = {}) => {
+    if (!user?._id) {
+      setIsLoading(false);
+      setIsRefreshing(false);
+      return;
+    }
+
     if (withLoader) {
       setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
     }
 
     try {
-      const response = await API.get("/tasks?all=true");
+      const response = await API.get("/tasks?all=true", { signal });
       const nextNotes = response.data?.data ?? response.data?.tasks ?? [];
+
+      if (signal?.aborted) {
+        return;
+      }
+
       setNotes(Array.isArray(nextNotes) ? nextNotes : []);
     } catch (error) {
+      if (error.code === "ERR_CANCELED" || error.name === "CanceledError") {
+        return;
+      }
+
       console.error("Unable to load tasks", error);
-      setNotes([]);
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
-  };
+  }, [user?._id]);
 
   useEffect(() => {
-    loadNotes({ withLoader: true });
-  }, []);
+    if (!user?._id) {
+      initialCachedNotesRef.current = [];
+      setNotes([]);
+      setIsLoading(false);
+      setIsRefreshing(false);
+      return undefined;
+    }
+
+    const cachedNotes = readCachedNotes(user._id);
+    initialCachedNotesRef.current = cachedNotes;
+    setNotes(cachedNotes);
+    setIsLoading(cachedNotes.length === 0);
+    setIsRefreshing(cachedNotes.length > 0);
+
+    const controller = new AbortController();
+    loadNotes({
+      withLoader: cachedNotes.length === 0,
+      signal: controller.signal
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [loadNotes, user?._id]);
+
+  useEffect(() => {
+    if (!user?._id) {
+      return;
+    }
+
+    writeCachedNotes(user._id, notes);
+  }, [notes, user?._id]);
 
   useMobileScheduledReminders({
     tasks: notes,
@@ -555,8 +671,8 @@ const Dashboard = () => {
     );
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
+  if (isLoading && notes.length === 0) {
+    return <LoadingScreen message="Fetching your latest tasks..." />;
   }
 
   return (
@@ -620,16 +736,28 @@ const Dashboard = () => {
                   <p className="max-w-2xl text-sm leading-6 text-[#9aa0a6]">{sectionHeading.description}</p>
                 </div>
 
-                {activeSection === "trash" && (
-                  <button
-                    type="button"
-                    onClick={handleEmptyTrash}
-                    className="inline-flex items-center justify-center rounded-full border border-[#8c3c3c] px-4 py-2 text-sm font-medium text-[#f28b82] transition-colors hover:bg-[#47292b]"
-                  >
-                    <Trash2 size={16} className="mr-2" />
-                    Empty Trash
-                  </button>
-                )}
+                <div className="flex flex-wrap items-center gap-3">
+                  {isRefreshing && (
+                    <div
+                      className="inline-flex items-center rounded-full border border-[#5f6368] bg-[#303134] px-3 py-2 text-xs font-medium text-[#9aa0a6]"
+                      aria-live="polite"
+                    >
+                      <span className="mr-2 h-2 w-2 rounded-full bg-[#8ab4f8] animate-pulse" />
+                      Syncing latest tasks...
+                    </div>
+                  )}
+
+                  {activeSection === "trash" && (
+                    <button
+                      type="button"
+                      onClick={handleEmptyTrash}
+                      className="inline-flex items-center justify-center rounded-full border border-[#8c3c3c] px-4 py-2 text-sm font-medium text-[#f28b82] transition-colors hover:bg-[#47292b]"
+                    >
+                      <Trash2 size={16} className="mr-2" />
+                      Empty Trash
+                    </button>
+                  )}
+                </div>
               </section>
 
               {activeSection === "notes" && (
@@ -731,7 +859,7 @@ const MobileCreateButton = ({ onCreateNote }) => (
   <button
     type="button"
     onClick={onCreateNote}
-    className="fixed bottom-5 right-4 z-[70] inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#feefc3] text-[#202124] shadow-[0_16px_32px_rgba(0,0,0,0.28)] transition-transform hover:scale-[1.03] max-[599px]:flex min-[600px]:hidden"
+    className="smooth-motion fixed bottom-5 right-4 z-[70] inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#feefc3] text-[#202124] shadow-[0_16px_32px_rgba(0,0,0,0.28)] hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_20px_36px_rgba(0,0,0,0.32)] max-[599px]:flex min-[600px]:hidden"
     title="Create task"
     aria-label="Create task"
   >

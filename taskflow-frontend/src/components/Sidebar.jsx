@@ -66,7 +66,7 @@ const Sidebar = ({
             <button
               type="button"
               onClick={onCloseMobile}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#303134] hover:text-[#e8eaed] min-[900px]:hidden"
+              className="smooth-motion smooth-lift inline-flex h-10 w-10 items-center justify-center rounded-full text-[#9aa0a6] hover:bg-[#303134] hover:text-[#e8eaed] min-[900px]:hidden"
             >
               <ChevronLeft size={18} />
             </button>
@@ -76,7 +76,7 @@ const Sidebar = ({
             <button
               type="button"
               onClick={onCreateNote}
-              className={`mb-5 inline-flex items-center justify-start rounded-full bg-[#feefc3] px-4 py-3 text-sm font-medium text-[#202124] shadow-sm transition-transform hover:scale-[1.01] min-[360px]:px-5 min-[360px]:py-3.5 ${
+              className={`smooth-motion mb-5 inline-flex items-center justify-start rounded-full bg-[#feefc3] px-4 py-3 text-sm font-medium text-[#202124] shadow-sm hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)] min-[360px]:px-5 min-[360px]:py-3.5 ${
                 isCollapsed ? "min-[900px]:w-full min-[900px]:justify-center min-[900px]:px-0" : "w-full"
               }`}
             >
@@ -98,10 +98,10 @@ const Sidebar = ({
                       onChangeSection(item.id);
                       onCloseMobile();
                     }}
-                    className={`flex w-full items-center rounded-full px-4 py-3 text-sm font-medium transition-colors min-[360px]:px-5 ${
+                    className={`smooth-motion flex w-full items-center rounded-full px-4 py-3 text-sm font-medium min-[360px]:px-5 ${
                       isActive
                         ? "bg-[#41331c] text-[#feefc3]"
-                        : "text-[#e8eaed] hover:bg-[#303134]"
+                        : "text-[#e8eaed] hover:translate-x-1 hover:bg-[#303134]"
                     } ${isCollapsed ? "min-[900px]:justify-center min-[900px]:rounded-2xl min-[900px]:px-0" : ""}`}
                   >
                     <Icon size={18} className={isCollapsed ? "" : "mr-3"} />
@@ -113,7 +113,7 @@ const Sidebar = ({
               <button
                 type="button"
                 onClick={onOpenLabelManager}
-                className={`flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-[#e8eaed] transition-colors hover:bg-[#303134] min-[360px]:px-5 ${
+                className={`smooth-motion flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-[#e8eaed] hover:translate-x-1 hover:bg-[#303134] min-[360px]:px-5 ${
                   isCollapsed ? "min-[900px]:justify-center min-[900px]:rounded-2xl min-[900px]:px-0" : ""
                 }`}
               >
@@ -142,10 +142,10 @@ const Sidebar = ({
                         onSelectLabel(label);
                         onCloseMobile();
                       }}
-                      className={`flex w-full items-center rounded-full px-4 py-3 text-sm font-medium transition-colors min-[360px]:px-5 ${
+                      className={`smooth-motion flex w-full items-center rounded-full px-4 py-3 text-sm font-medium min-[360px]:px-5 ${
                         isActive
                           ? "bg-[#1f3b5b] text-[#8ab4f8]"
-                          : "text-[#e8eaed] hover:bg-[#303134]"
+                          : "text-[#e8eaed] hover:translate-x-1 hover:bg-[#303134]"
                       } ${isCollapsed ? "min-[900px]:justify-center min-[900px]:rounded-2xl min-[900px]:px-0" : ""}`}
                       title={label}
                     >
@@ -171,7 +171,7 @@ const Sidebar = ({
           </div>
 
           <div className="border-t border-white/10 px-2 py-4 min-[360px]:px-3">
-            <div className={`flex items-center rounded-2xl border border-white/10 bg-[#303134] px-3 py-3 ${isCollapsed ? "min-[900px]:justify-center min-[900px]:px-0" : ""}`}>
+            <div className={`smooth-motion flex items-center rounded-2xl border border-white/10 bg-[#303134] px-3 py-3 ${isCollapsed ? "min-[900px]:justify-center min-[900px]:px-0" : ""}`}>
               <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#8ab4f8] text-sm font-semibold text-[#202124]">
                 {user?.name?.slice(0, 1)?.toUpperCase() || "U"}
               </div>

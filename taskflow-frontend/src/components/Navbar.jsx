@@ -82,7 +82,7 @@ const Navbar = ({
 
   const searchBar = (
     <div className="relative order-last basis-full min-w-0 min-[600px]:order-none min-[600px]:basis-auto min-[600px]:flex-1 min-[600px]:max-w-4xl">
-      <div className="flex h-11 items-center rounded-full border border-[#5f6368] bg-[#303134] px-3.5 min-[360px]:px-4 min-[600px]:h-12">
+      <div className="smooth-motion flex h-11 items-center rounded-full border border-[#5f6368] bg-[#303134] px-3.5 min-[360px]:px-4 min-[600px]:h-12">
         <Search size={18} className="mr-2.5 shrink-0 text-[#9aa0a6] min-[360px]:mr-3" />
         <input
           ref={searchInputRef}
@@ -104,7 +104,7 @@ const Navbar = ({
           <button
             type="button"
             onClick={clearSearch}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#3c4043] hover:text-[#e8eaed]"
+            className="smooth-motion smooth-lift inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9aa0a6] hover:bg-[#3c4043] hover:text-[#e8eaed]"
             title="Clear search"
           >
             <X size={16} />
@@ -113,7 +113,7 @@ const Navbar = ({
       </div>
 
       {(searchFocused || hasActiveFilters) && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-[1.25rem] border border-[#5f6368] bg-[#202124] p-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)] min-[360px]:rounded-[1.5rem] min-[360px]:p-4">
+        <div className="smooth-panel absolute left-0 right-0 top-full z-20 mt-2 rounded-[1.25rem] border border-[#5f6368] bg-[#202124] p-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)] min-[360px]:rounded-[1.5rem] min-[360px]:p-4">
           <div className="flex flex-wrap gap-2">
             {SEARCH_FILTER_DEFINITIONS.map((filter) => (
               <button
@@ -121,7 +121,7 @@ const Navbar = ({
                 type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => toggleSearchFilter(filter.key)}
-                className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                className={`smooth-motion rounded-full border px-3 py-2 text-xs font-medium ${
                   searchFilters[filter.key]
                     ? "border-[#8ab4f8] bg-[#1f3b5b] text-[#8ab4f8]"
                     : "border-[#5f6368] text-[#e8eaed] hover:border-[#8ab4f8]"
@@ -139,7 +139,7 @@ const Navbar = ({
                 type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => toggleColorFilter(color.value)}
-                className={`h-8 w-8 rounded-full border transition-transform hover:scale-105 ${
+            className={`smooth-motion h-8 w-8 rounded-full border hover:scale-105 ${
                   searchFilters.colors.includes(color.value)
                     ? "ring-2 ring-[#8ab4f8] ring-offset-2 ring-offset-[#202124]"
                     : ""
@@ -160,7 +160,7 @@ const Navbar = ({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#303134] hover:text-[#e8eaed]"
+          className="smooth-motion smooth-lift inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#9aa0a6] hover:bg-[#303134] hover:text-[#e8eaed]"
           title="Toggle sidebar"
         >
           <Menu size={20} />
@@ -183,7 +183,7 @@ const Navbar = ({
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+              className={`smooth-motion smooth-lift inline-flex h-9 w-9 items-center justify-center rounded-full ${
                 viewMode === "grid" ? "bg-[#8ab4f8] text-[#202124]" : "text-[#9aa0a6] hover:text-[#e8eaed]"
               }`}
               title="Grid view"
@@ -193,7 +193,7 @@ const Navbar = ({
             <button
               type="button"
               onClick={() => setViewMode("list")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+              className={`smooth-motion smooth-lift inline-flex h-9 w-9 items-center justify-center rounded-full ${
                 viewMode === "list" ? "bg-[#8ab4f8] text-[#202124]" : "text-[#9aa0a6] hover:text-[#e8eaed]"
               }`}
               title="List view"
@@ -205,7 +205,7 @@ const Navbar = ({
           <button
             type="button"
             onClick={onOpenSettings}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[#9aa0a6] transition-colors hover:bg-[#303134] hover:text-[#e8eaed]"
+            className="smooth-motion smooth-lift inline-flex h-11 w-11 items-center justify-center rounded-full text-[#9aa0a6] hover:bg-[#303134] hover:text-[#e8eaed]"
             title="Settings"
           >
             <Settings size={18} />
@@ -215,14 +215,14 @@ const Navbar = ({
             <button
               type="button"
               onClick={() => setShowProfileMenu((current) => !current)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#5f6368] bg-[#303134] text-sm font-semibold text-[#e8eaed] min-[360px]:h-11 min-[360px]:w-11"
+              className="smooth-motion smooth-lift inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#5f6368] bg-[#303134] text-sm font-semibold text-[#e8eaed] min-[360px]:h-11 min-[360px]:w-11"
               title="Profile"
             >
               {user?.name?.slice(0, 1)?.toUpperCase() || "U"}
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.5rem] border border-[#5f6368] bg-[#202124] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+              <div className="smooth-panel absolute right-0 top-full z-20 mt-2 w-[min(18rem,calc(100vw-1.5rem))] rounded-[1.5rem] border border-[#5f6368] bg-[#202124] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aa0a6]">Profile</p>
                 <p className="mt-3 text-base font-medium text-[#e8eaed]">{user?.name || "User"}</p>
                 <p className="mt-1 break-all text-sm text-[#9aa0a6]">{user?.email || "name@example.com"}</p>
@@ -234,14 +234,14 @@ const Navbar = ({
                       onOpenSettings();
                       setShowProfileMenu(false);
                     }}
-                    className="rounded-full border border-[#5f6368] px-4 py-2 text-sm font-medium text-[#e8eaed] transition-colors hover:border-[#8ab4f8] hover:text-[#8ab4f8]"
+                    className="smooth-motion smooth-lift rounded-full border border-[#5f6368] px-4 py-2 text-sm font-medium text-[#e8eaed] hover:border-[#8ab4f8] hover:text-[#8ab4f8]"
                   >
                     Open settings
                   </button>
                   <button
                     type="button"
                     onClick={logout}
-                    className="rounded-full border border-[#8c3c3c] px-4 py-2 text-sm font-medium text-[#f28b82] transition-colors hover:bg-[#47292b]"
+                    className="smooth-motion smooth-lift rounded-full border border-[#8c3c3c] px-4 py-2 text-sm font-medium text-[#f28b82] hover:bg-[#47292b]"
                   >
                     Sign out
                   </button>

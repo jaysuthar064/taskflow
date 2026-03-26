@@ -1,30 +1,38 @@
 import React from "react";
-import { Loader2 } from "lucide-react";
 
-const LoadingScreen = () => {
+const LoadingScreen = ({
+  title = "TaskFlow",
+  message = "Loading your workspace..."
+}) => {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#202124] px-4 animate-in fade-in duration-500">
-      <div className="relative mb-6 sm:mb-8">
-        <div className="absolute -inset-8 rounded-full bg-[#8ab4f8]/18 blur-3xl animate-pulse sm:-inset-10" />
-        <div className="absolute -inset-8 rounded-full bg-[#feefc3]/10 blur-3xl animate-pulse delay-700 sm:-inset-10" />
-
-        <div className="relative flex h-16 w-16 cursor-wait items-center justify-center rounded-[1.35rem] bg-[#8ab4f8] shadow-2xl shadow-[#8ab4f8]/30 sm:h-20 sm:w-20">
-          <span className="text-3xl font-bold text-[#202124] sm:text-4xl">T</span>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#202124]/96 px-4">
+      <div
+        className="flex w-full max-w-xs flex-col items-center rounded-[1.75rem] border border-white/10 bg-[#26282b] px-6 py-7 text-center shadow-[0_18px_48px_rgba(0,0,0,0.22)]"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8ab4f8] text-xl font-bold text-[#202124] shadow-sm">
+          T
         </div>
-      </div>
 
-      <div className="flex flex-col items-center space-y-3">
-        <div className="flex items-center space-x-2 text-lg font-bold tracking-tight text-[#e8eaed] sm:text-xl">
-          <Loader2 className="animate-spin text-[#8ab4f8]" size={20} />
-          <span>TaskFlow Pro</span>
+        <div className="mt-4 flex items-center gap-2" aria-hidden="true">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#8ab4f8] animate-[taskflow-dot_1s_ease-in-out_infinite]" />
+          <span
+            className="h-2.5 w-2.5 rounded-full bg-[#8ab4f8] animate-[taskflow-dot_1s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.14s" }}
+          />
+          <span
+            className="h-2.5 w-2.5 rounded-full bg-[#8ab4f8] animate-[taskflow-dot_1s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.28s" }}
+          />
         </div>
-        <p className="animate-pulse text-center text-sm font-medium text-[#9aa0a6]">
-          Crafting your workspace...
-        </p>
-      </div>
 
-      <div className="mt-10 h-1.5 w-40 overflow-hidden rounded-full bg-[#303134] sm:mt-12 sm:w-48">
-        <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-[#8ab4f8] to-[#feefc3] animate-[loading_2s_ease-in-out_infinite]" />
+        <p className="mt-4 text-base font-semibold tracking-tight text-[#e8eaed]">{title}</p>
+        <p className="mt-2 text-sm leading-6 text-[#9aa0a6]">{message}</p>
+
+        <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+          <div className="h-full w-1/2 rounded-full bg-[#8ab4f8] animate-[taskflow-loading_1.4s_ease-in-out_infinite]" />
+        </div>
       </div>
     </div>
   );

@@ -177,7 +177,7 @@ const taskSchema= new mongoose.Schema(
 );
 
 taskSchema.index({ user: 1, pinned: -1, updatedAt: -1 });
-taskSchema.index({ user: 1, archived: 1, trashedAt: 1 });
+taskSchema.index({ user: 1, trashedAt: 1, archived: 1, pinned: -1, updatedAt: -1 });
 taskSchema.index({ user: 1, reminder: 1 });
 
 const Task= mongoose.model("Task",taskSchema);

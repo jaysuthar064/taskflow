@@ -16,6 +16,8 @@ const REMINDER_WEEKDAY_VALUES = [0, 1, 2, 3, 4, 5, 6];
 const REMINDER_PLACE_MAX_LENGTH = 120;
 const IMAGE_DATA_MAX_LENGTH = 2_500_000;
 const TRASH_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const TRASH_PURGE_INTERVAL_MS = 10 * 60 * 1000;
+const trashPurgeRunAtByUser = new Map();
 
 const createBadRequestError = (message) => {
     const error = new Error(message);
@@ -482,6 +484,28 @@ const purgeExpiredTrash = async (userId) => {
     await Task.deleteMany(filter);
 };
 
+const getTrashRetentionCutoff = () => new Date(Date.now() - TRASH_RETENTION_MS);
+
+const queueTrashPurge = (userId) => {
+    if (!userId) {
+        return;
+    }
+
+    const userKey = userId.toString();
+    const now = Date.now();
+    const lastRunAt = trashPurgeRunAtByUser.get(userKey) || 0;
+
+    if (now - lastRunAt < TRASH_PURGE_INTERVAL_MS) {
+        return;
+    }
+
+    trashPurgeRunAtByUser.set(userKey, now);
+
+    purgeExpiredTrash(userId).catch(() => {
+        trashPurgeRunAtByUser.delete(userKey);
+    });
+};
+
 const buildSearchFilter = (search) => {
     if (!search) {
         return null;
@@ -728,7 +752,8 @@ export const taskCreate = async (req, res) => {
 
 export const getTask = async (req, res) => {
     try {
-        await purgeExpiredTrash(req.user._id);
+        queueTrashPurge(req.user._id);
+        const trashRetentionCutoff = getTrashRetentionCutoff();
 
         const filter = {
             user: req.user._id
@@ -758,7 +783,7 @@ export const getTask = async (req, res) => {
         const includeArchived = req.query.archived === "true";
 
         if (includeTrashed) {
-            filter.trashedAt = { $ne: null };
+            filter.trashedAt = { $ne: null, $gt: trashRetentionCutoff };
         } else {
             filter.trashedAt = null;
             filter.archived = includeArchived;
@@ -770,7 +795,7 @@ export const getTask = async (req, res) => {
             Object.assign(filter, searchFilter);
         }
 
-        let query = Task.find(filter);
+        let query = Task.find(filter).select("-__v").lean();
         const sortTask = req.query.sort;
 
         if (sortTask) {
@@ -893,9 +918,10 @@ export const deleteTask = async (req, res) => {
 
 export const taskStats = async (req, res) => {
     try {
-        await purgeExpiredTrash(req.user._id);
+        queueTrashPurge(req.user._id);
 
         const userId = req.user._id;
+        const trashRetentionCutoff = getTrashRetentionCutoff();
         const stats = await Task.aggregate([
             {
                 $match: { user: new mongoose.Types.ObjectId(userId) }
@@ -943,7 +969,16 @@ export const taskStats = async (req, res) => {
                     },
                     trashedNotes: {
                         $sum: {
-                            $cond: [{ $ne: ["$trashedAt", null] }, 1, 0]
+                            $cond: [
+                                {
+                                    $and: [
+                                        { $ne: ["$trashedAt", null] },
+                                        { $gt: ["$trashedAt", trashRetentionCutoff] }
+                                    ]
+                                },
+                                1,
+                                0
+                            ]
                         }
                     },
                     pinnedNotes: {

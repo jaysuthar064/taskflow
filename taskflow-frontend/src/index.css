@@ -51,6 +51,22 @@
   .animate-pulse-slow {
     animation: pulse-slow 4s infinite ease-in-out;
   }
+
+  .smooth-motion {
+    transition-property: transform, box-shadow, border-color, background-color, color, opacity;
+    transition-duration: 240ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .smooth-lift:hover,
+  .smooth-lift:focus-visible {
+    transform: translate3d(0, -2px, 0);
+  }
+
+  .smooth-panel {
+    animation: taskflow-panel-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: top right;
+  }
 }
 
 @keyframes bounce-subtle {
@@ -61,6 +77,53 @@
 @keyframes pulse-slow {
   0%, 100% { opacity: 0.1; transform: scale(1); }
   50% { opacity: 0.2; transform: scale(1.05); }
+}
+
+@keyframes taskflow-dot {
+  0%, 80%, 100% {
+    opacity: 0.35;
+    transform: translateY(0) scale(0.92);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1);
+  }
+}
+
+@keyframes taskflow-loading {
+  0% {
+    transform: translateX(-90%);
+  }
+  50% {
+    transform: translateX(35%);
+  }
+  100% {
+    transform: translateX(180%);
+  }
+}
+
+@keyframes taskflow-panel-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smooth-motion,
+  .smooth-panel {
+    animation: none;
+    transition: none;
+  }
+
+  .smooth-lift:hover,
+  .smooth-lift:focus-visible {
+    transform: none;
+  }
 }
 
 /* Custom Scrollbar */

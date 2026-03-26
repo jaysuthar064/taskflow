@@ -13,7 +13,9 @@ export const protect = async (req, res, next) => {
             token = req.headers.authorization.split(" ")[1];
             const decoded = verifyAccessToken(token);
             const [user, session] = await Promise.all([
-                User.findById(decoded.id),
+                User.findById(decoded.id)
+                    .select("_id name email role passwordConfigured googleId twoFactorEnabled createdAt updatedAt")
+                    .lean(),
                 Session.findOne({
                     user: decoded.id,
                     sessionTokenId: decoded.sessionId
