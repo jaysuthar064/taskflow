@@ -12,7 +12,7 @@ const bootstrap = async () => {
     startReminderProcessor();
 
     app.listen(PORT,()=>{
-        // Server running silently
+        console.log(`Taskflow API listening on port ${PORT}`);
     });
 };
 

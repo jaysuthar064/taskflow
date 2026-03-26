@@ -6,7 +6,17 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URL);
+        if (!process.env.MONGO_URL) {
+            throw new Error("MONGO_URL is not set");
+        }
+
+        const sanitizedUrl = process.env.MONGO_URL.replace(/\/\/([^:]+):([^@]+)@/, "//$1:***@");
+        console.log(`Connecting to MongoDB: ${sanitizedUrl}`);
+
+        await mongoose.connect(process.env.MONGO_URL, {
+            serverSelectionTimeoutMS: 10000
+        });
+        console.log("Database connected successfully");
     } catch (error) {
         console.error("Database connection failed:", error.message);
         process.exit(1);
