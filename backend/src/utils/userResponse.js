@@ -9,6 +9,7 @@ export const getLoginMethods = (user) => ({
 
 export const serializeUser = (user) => ({
     id: user?._id?.toString?.() || "",
+    _id: user?._id?.toString?.() || "",
     name: user?.name || "",
     email: user?.email || "",
     role: user?.role || "user",

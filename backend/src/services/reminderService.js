@@ -127,7 +127,7 @@ const processDueReminders = async () => {
                 }
             },
             {
-                new: true
+                returnDocument: "after"
             }
         );
 

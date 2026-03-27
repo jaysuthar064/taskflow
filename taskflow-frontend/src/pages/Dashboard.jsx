@@ -97,7 +97,8 @@ const writeCachedNotes = (userId, notes) => {
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const initialCachedNotesRef = useRef(readCachedNotes(user?._id));
+  const userId = user?._id || user?.id || "";
+  const initialCachedNotesRef = useRef(readCachedNotes(userId));
   const installSettings = useAppInstallPrompt();
   const notificationSettings = usePushNotifications();
   const searchInputRef = useRef(null);
@@ -132,12 +133,12 @@ const Dashboard = () => {
 
   const persistLabels = (nextLabels) => {
     setLabelCatalog(nextLabels);
-    writeStoredLabels(user?._id, nextLabels);
+    writeStoredLabels(userId, nextLabels);
   };
 
   useEffect(() => {
-    setLabelCatalog(readStoredLabels(user?._id));
-  }, [user?._id]);
+    setLabelCatalog(readStoredLabels(userId));
+  }, [userId]);
 
   useEffect(() => {
     if (typeof localStorage !== "undefined") {
@@ -146,7 +147,7 @@ const Dashboard = () => {
   }, [viewMode]);
 
   const loadNotes = useCallback(async ({ withLoader = false, signal } = {}) => {
-    if (!user?._id) {
+    if (!userId) {
       setIsLoading(false);
       setIsRefreshing(false);
       return;
@@ -179,10 +180,10 @@ const Dashboard = () => {
         setIsRefreshing(false);
       }
     }
-  }, [user?._id]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!user?._id) {
+    if (!userId) {
       initialCachedNotesRef.current = [];
       setNotes([]);
       setIsLoading(false);
@@ -190,7 +191,7 @@ const Dashboard = () => {
       return undefined;
     }
 
-    const cachedNotes = readCachedNotes(user._id);
+    const cachedNotes = readCachedNotes(userId);
     initialCachedNotesRef.current = cachedNotes;
     setNotes(cachedNotes);
     setIsLoading(cachedNotes.length === 0);
@@ -205,15 +206,15 @@ const Dashboard = () => {
     return () => {
       controller.abort();
     };
-  }, [loadNotes, user?._id]);
+  }, [loadNotes, userId]);
 
   useEffect(() => {
-    if (!user?._id) {
+    if (!userId) {
       return;
     }
 
-    writeCachedNotes(user._id, notes);
-  }, [notes, user?._id]);
+    writeCachedNotes(userId, notes);
+  }, [notes, userId]);
 
   useMobileScheduledReminders({
     tasks: notes,

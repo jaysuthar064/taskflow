@@ -4,6 +4,20 @@ import { getExistingPushSubscription, isPushSupported } from "../utils/pushNotif
 import { clearPendingTwoFactorChallenge } from "../utils/twoFactorChallenge";
 import { AuthContext } from "./auth-context";
 
+const normalizeUser = (user) => {
+  if (!user || typeof user !== "object") {
+    return null;
+  }
+
+  const normalizedId = user._id || user.id || "";
+
+  return {
+    ...user,
+    id: normalizedId,
+    _id: normalizedId
+  };
+};
+
 const getStoredToken = () => {
   try {
     return localStorage.getItem("token");
@@ -16,7 +30,7 @@ const getStoredToken = () => {
 const getStoredUser = () => {
   try {
     const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
+    return user ? normalizeUser(JSON.parse(user)) : null;
   } catch (error) {
     console.error("Unable to access localStorage for user", error);
     return null;
@@ -40,16 +54,20 @@ const AuthProvider = ({ children }) => {
   const [isAuthReady, setIsAuthReady] = useState(true);
 
   const login = useCallback((nextToken, nextUser) => {
+    const normalizedUser = normalizeUser(nextUser);
+
     try {
       localStorage.setItem("token", nextToken);
-      if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
+      if (normalizedUser) {
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
+      }
     } catch (error) {
       console.error("Unable to save credentials to localStorage", error);
     }
 
     clearPendingTwoFactorChallenge();
     setToken(nextToken);
-    setUser(nextUser);
+    setUser(normalizedUser);
     setIsAuthReady(true);
   }, []);
 
@@ -108,7 +126,7 @@ const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await API.get("/profile");
-          const userData = response.data?.user;
+          const userData = normalizeUser(response.data?.user);
           if (userData) {
             try {
               localStorage.setItem("user", JSON.stringify(userData));

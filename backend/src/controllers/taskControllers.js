@@ -873,7 +873,7 @@ export const updateTask = async (req, res) => {
         const updateTask = await Task.findByIdAndUpdate(
             req.params.id,
             nextNote,
-            { new: true, runValidators: true }
+            { returnDocument: "after", runValidators: true }
         );
 
         return res.status(200).json({
